@@ -34,6 +34,13 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<IProductEmbeddingRepository, ProductEmbeddingRepository>();
+        services.AddScoped<IAppSettingRepository, AppSettingRepository>();
+
+        // AI — Groq (free: 6000 req/min, llama-3.3-70b, hiểu tiếng Việt tốt)
+        services.AddHttpClient("Groq");
+        services.AddSingleton<ISemanticKernelService, GroqAIService>();
+        services.AddHostedService<EmbeddingBackgroundService>();
 
         // Redis Cache
         var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";

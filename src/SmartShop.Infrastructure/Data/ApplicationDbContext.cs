@@ -17,6 +17,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<ProductEmbedding> ProductEmbeddings { get; set; }
+    public DbSet<AppSetting> AppSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

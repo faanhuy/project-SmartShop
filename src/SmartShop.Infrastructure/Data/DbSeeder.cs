@@ -17,6 +17,22 @@ public static class DbSeeder
         {
             await context.Database.MigrateAsync();
 
+            // Seed AppSettings nếu chưa có
+            if (!await context.AppSettings.AnyAsync())
+            {
+                var defaults = new[]
+                {
+                    AppSetting.Create("AI:Search:MinScore",          "0.3",       "number",  "Điểm tối thiểu để hiển thị kết quả tìm kiếm AI (0.0 - 1.0)"),
+                    AppSetting.Create("AI:Search:TopN",              "8",         "number",  "Số kết quả tối đa trả về khi tìm kiếm AI"),
+                    AppSetting.Create("AI:Recommendations:Count",    "5",         "number",  "Số sản phẩm gợi ý tối đa"),
+                    AppSetting.Create("AI:Recommendations:MinScore", "0.4",       "number",  "Điểm tối thiểu để hiển thị gợi ý sản phẩm"),
+                    AppSetting.Create("Site:Name",                   "SmartShop", "text",    "Tên hiển thị của website"),
+                };
+                await context.AppSettings.AddRangeAsync(defaults);
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded {Count} AppSettings.", defaults.Length);
+            }
+
             if (await context.Categories.AnyAsync()) return; // Already seeded
 
             logger.LogInformation("Seeding database...");

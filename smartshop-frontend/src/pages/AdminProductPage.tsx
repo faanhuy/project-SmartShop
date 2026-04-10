@@ -4,6 +4,7 @@ import { categoryService, productService } from '../services/productService';
 import { useAuthStore } from '../store/authStore';
 import type { CategoryDto, CreateProductRequest, ProductDto } from '../types/product';
 import { FiLogOut, FiArrowLeft } from 'react-icons/fi';
+import GenerateDescriptionButton from '../components/GenerateDescriptionButton';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -153,7 +154,14 @@ export default function AdminProductPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+                    <GenerateDescriptionButton
+                      productName={form.name}
+                      categoryName={categories.find((c) => c.id === form.categoryId)?.name ?? ''}
+                      onGenerated={(desc) => setForm((f) => ({ ...f, description: desc }))}
+                    />
+                  </div>
                   <textarea
                     required
                     rows={3}

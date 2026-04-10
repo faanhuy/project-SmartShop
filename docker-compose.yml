@@ -2,7 +2,8 @@ version: '3.9'
 
 services:
 
-  # SQL Server
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: smartshop-sqlserver
@@ -18,7 +19,6 @@ services:
       interval: 10s
       retries: 10
 
-  # Redis
   redis:
     image: redis:7-alpine
     container_name: smartshop-redis
@@ -27,6 +27,49 @@ services:
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
+  # ── Application ─────────────────────────────────────────────────────────────
+
+  backend:
+    build:
+      context: .
+      dockerfile: src/SmartShop.WebAPI/Dockerfile
+    container_name: smartshop-backend
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=SmartShop;User Id=sa;Password=SmartShop@123;TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT_KEY}"
+      Jwt__Issuer: "SmartShop"
+      Jwt__Audience: "SmartShopClients"
+      Jwt__ExpiresInMinutes: "60"
+      Groq__ApiKey: "${GROQ_API_KEY}"
+      Groq__Model: "llama-3.3-70b-versatile"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./smartshop-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: "http://localhost:8080"
+    container_name: smartshop-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   sqldata: {}

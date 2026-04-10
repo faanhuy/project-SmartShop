@@ -5,6 +5,7 @@ import { cartService } from '../services/cartService';
 import { useAuthStore } from '../store/authStore';
 import type { ProductDto } from '../types/product';
 import { FiLogOut, FiArrowLeft, FiHome } from 'react-icons/fi';
+import RecommendationCarousel from '../components/RecommendationCarousel';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -195,6 +196,8 @@ export default function ProductDetailPage() {
             ) : null}
           </div>
         </div>
+
+        <RecommendationCarousel productId={product.id} />
       </div>
     </div>
   );

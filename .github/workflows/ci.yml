@@ -1,0 +1,89 @@
+name: CI — Test & Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '22'
+
+jobs:
+
+  # ── Job 1: .NET Tests + Build ─────────────────────────────────────────────
+  test-dotnet:
+    name: .NET Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore SmartShop.slnx
+
+      - name: Build
+        run: dotnet build SmartShop.slnx -c Release --no-restore
+
+      - name: Test with coverage
+        run: |
+          dotnet test tests/SmartShop.Application.Tests/SmartShop.Application.Tests.csproj \
+            --no-build -c Release \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage \
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: ./coverage
+
+  # ── Job 2: Frontend Build ─────────────────────────────────────────────────
+  build-frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smartshop-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: smartshop-frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: "http://localhost:8080"
+
+  # ── Job 3: Backend Docker build check ────────────────────────────────────
+  build-backend-docker:
+    name: Backend Docker Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/SmartShop.WebAPI/Dockerfile
+          push: false
+          tags: smartshop-backend:ci

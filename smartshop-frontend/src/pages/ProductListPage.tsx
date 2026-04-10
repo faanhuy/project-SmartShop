@@ -5,7 +5,8 @@ import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
 import { useAuthStore } from '../store/authStore';
 import type { CategoryDto, PagedResult, ProductDto } from '../types/product';
-import { FiShoppingCart, FiPackage, FiLogOut, FiSearch } from 'react-icons/fi';
+import { FiShoppingCart, FiPackage, FiLogOut, FiSearch, FiCpu } from 'react-icons/fi';
+import AISearchBar from '../components/AISearchBar';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -22,6 +23,7 @@ export default function ProductListPage() {
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [aiMode, setAiMode] = useState(false);
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [sortBy, setSortBy] = useState<number>(0); // 0 = Newest
   const [page, setPage] = useState(1);
@@ -56,7 +58,7 @@ export default function ProductListPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    setSearch(searchInput.trim().toLowerCase());
+    setSearch(searchInput.trim());
   };
 
   const handleCategoryChange = (id: string | undefined) => {
@@ -92,20 +94,38 @@ export default function ProductListPage() {
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <Link to="/" className="text-xl font-bold text-blue-600">SmartShop</Link>
-          <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
-            <input
-              className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
+          <div className="flex-1 max-w-xl flex items-center gap-2">
+            {aiMode ? (
+              <AISearchBar onClose={() => setAiMode(false)} />
+            ) : (
+              <form onSubmit={handleSearch} className="flex-1 relative">
+                <input
+                  className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Tìm kiếm sản phẩm..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                >
+                  <FiSearch size={18} />
+                </button>
+              </form>
+            )}
             <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
+              onClick={() => setAiMode(!aiMode)}
+              title={aiMode ? 'Tìm kiếm thường' : 'Tìm kiếm AI'}
+              className={`shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
+                aiMode
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+              }`}
             >
-              <FiSearch size={18} />
+              <FiCpu size={14} />
+              AI
             </button>
-          </form>
+          </div>
           <div className="flex items-center gap-3 shrink-0">
             {isAuthenticated ? (
               <>

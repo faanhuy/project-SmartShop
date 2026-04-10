@@ -5,4 +5,7 @@
     <Project Path="src/SmartShop.Infrastructure/SmartShop.Infrastructure.csproj" />
     <Project Path="src/SmartShop.WebAPI/SmartShop.WebAPI.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SmartShop.Application.Tests/SmartShop.Application.Tests.csproj" />
+  </Folder>
 </Solution>
