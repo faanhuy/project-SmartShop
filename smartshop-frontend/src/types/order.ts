@@ -20,6 +20,7 @@ export interface OrderDto {
 export interface PlaceOrderRequest {
   shippingAddress: string;
   notes?: string;
+  couponCode?: string;
 }
 
 export const ORDER_STATUSES = [

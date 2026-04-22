@@ -6,6 +6,7 @@ import ProductDetailPage from '../pages/ProductDetailPage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
 import AdminProductPage from '../pages/AdminProductPage';
 import AdminOrderPage from '../pages/AdminOrderPage';
+import AdminCouponsPage from '../pages/AdminCouponsPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
@@ -83,6 +84,14 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <AdminOrderPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/coupons',
+    element: (
+      <AdminRoute>
+        <AdminCouponsPage />
       </AdminRoute>
     ),
   },

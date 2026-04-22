@@ -1,11 +1,12 @@
 using SmartShop.Domain.Common;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Enums;
 namespace SmartShop.Domain.Entities;
 
 public class Coupon : BaseAuditableEntity
 {
     public DiscountType DiscountType { get; private set; }
-    public string Code { get; private set; }
+    public string Code { get; private set; } = string.Empty;
     public decimal DiscountValue { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public int MaxUsage { get; private set; }
@@ -61,12 +62,18 @@ public class Coupon : BaseAuditableEntity
     public void Use()
     {
         if (IsExpired())
-            throw new InvalidOperationException($"Coupon '{Code}' đã hết hạn");
+            throw new ConflictException($"Coupon '{Code}' đã hết hạn");
 
         if (!HasRemaining())
-            throw new InvalidOperationException($"Coupon '{Code}' đã hết lượt sử dụng");
+            throw new ConflictException($"Coupon '{Code}' đã hết lượt sử dụng");
 
         UsedQuantity++;
+    }
+
+    public void Refund()
+    {
+        if (UsedQuantity > 0)
+            UsedQuantity--;
     }
     private readonly List<CouponUsage> _usages = new List<CouponUsage>();
     public IReadOnlyCollection<CouponUsage> Usages => _usages.AsReadOnly();

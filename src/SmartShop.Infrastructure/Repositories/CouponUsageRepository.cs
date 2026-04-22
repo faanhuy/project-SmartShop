@@ -24,5 +24,10 @@ public class CouponUsageRepository : ICouponUsageRepository
     public async Task<CouponUsage?> GetByCouponIdAsync(Guid couponId, CancellationToken ct = default)
         => await _context.CouponUsages.FirstOrDefaultAsync(u => u.CouponId == couponId, ct);
 
+    public async Task<CouponUsage?> GetByOrderIdAsync(Guid orderId, CancellationToken ct = default)
+        => await _context.CouponUsages.FirstOrDefaultAsync(u => u.OrderId == orderId, ct);
+
     public void Update(CouponUsage usage) => _context.CouponUsages.Update(usage);
+
+    public void Delete(CouponUsage usage) => _context.CouponUsages.Remove(usage);
 }

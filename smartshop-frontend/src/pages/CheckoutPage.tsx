@@ -5,6 +5,7 @@ import { cartService } from '../services/cartService';
 import type { CartDto } from '../types/cart';
 import { FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
+import { couponSession } from '../utils/couponSession';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -17,6 +18,11 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<CartDto | null>(null);
   const [cartLoading, setCartLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Đọc coupon đã áp dụng từ sessionStorage
+  const savedCoupon = couponSession.load();
+  const couponCode     = savedCoupon?.code ?? null;
+  const discountAmount = savedCoupon?.result.discountAmount ?? 0;
 
   useEffect(() => {
     cartService.getCart()
@@ -37,7 +43,9 @@ export default function CheckoutPage() {
       const order = await orderService.placeOrder({
         shippingAddress: shippingAddress.trim(),
         notes: notes.trim() || undefined,
+        couponCode: couponCode ?? "",
       });
+      couponSession.clear();
       navigate(`/orders/${order.id}`, { replace: true });
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
@@ -154,13 +162,21 @@ export default function CheckoutPage() {
                       <span>Tạm tính</span>
                       <span>{formatPrice(cart.totalAmount)}</span>
                     </div>
+                    {couponCode && discountAmount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Mã giảm giá ({couponCode})</span>
+                        <span>-{formatPrice(discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Phí vận chuyển</span>
                       <span className="text-green-600">Miễn phí</span>
                     </div>
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t">
                       <span>Tổng cộng</span>
-                      <span className="text-blue-600">{formatPrice(cart.totalAmount)}</span>
+                      <span className="text-blue-600">
+                        {formatPrice(Math.max(0, cart.totalAmount - discountAmount))}
+                      </span>
                     </div>
                   </div>
                 </>

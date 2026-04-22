@@ -138,4 +138,110 @@ public class PlaceOrderCommandHandlerTests
 
         cart.Items.Should().BeEmpty();
     }
+    [Fact]
+    public async Task Handle_ValidCoupon_AppliesDiscountAndSavesUsage()
+    {
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var couponId = Guid.NewGuid();
+        var cart = CartEntity.Create(userId);
+        cart.AddItem(productId, 2, 100m); // 200k
+        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var coupon = Coupon.Create("SALE10", SmartShop.Domain.Enums.DiscountType.Percentage, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 100);
+
+        _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        _couponRepo.Setup(r => r.GetByCodeAsync("SALE10", default)).ReturnsAsync(coupon);
+        _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "SALE10");
+        var result = await CreateHandler().Handle(cmd, default);
+
+        result.CouponCode.Should().Be("SALE10");
+        result.DiscountAmount.Should().Be(20); // 10% of 200
+        _couponUsageRepo.Verify(r => r.AddAsync(It.IsAny<CouponUsage>(), default), Times.Once);
+        _couponRepo.Verify(r => r.Update(It.IsAny<Coupon>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ExpiredCoupon_ThrowsConflictException()
+    {
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var cart = CartEntity.Create(userId);
+        cart.AddItem(productId, 1, 100m);
+        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var coupon = Coupon.Create("EXPIRED", SmartShop.Domain.Enums.DiscountType.FixedAmount, 50, DateTime.UtcNow.AddDays(-1), 5, "desc", 50);
+
+        _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        _couponRepo.Setup(r => r.GetByCodeAsync("EXPIRED", default)).ReturnsAsync(coupon);
+
+        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "EXPIRED");
+        var act = () => CreateHandler().Handle(cmd, default);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("*hết hạn*");
+    }
+
+    [Fact]
+    public async Task Handle_CouponAlreadyUsedByUser_ThrowsConflictException()
+    {
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var cart = CartEntity.Create(userId);
+        cart.AddItem(productId, 1, 100m);
+        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var coupon = Coupon.Create("ONCE", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 50);
+
+        _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        _couponRepo.Setup(r => r.GetByCodeAsync("ONCE", default)).ReturnsAsync(coupon);
+        _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(true);
+
+        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "ONCE");
+        var act = () => CreateHandler().Handle(cmd, default);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("*đã sử dụng*");
+    }
+
+    [Fact]
+    public async Task Handle_CouponBelowMinOrderValue_ThrowsConflictException()
+    {
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var cart = CartEntity.Create(userId);
+        cart.AddItem(productId, 1, 40m); // chỉ 40k
+        var product = Product.Create("Laptop", "Desc", 40m, 10, Guid.NewGuid(), "laptop");
+        var coupon = Coupon.Create("MIN100", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 100);
+
+        _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        _couponRepo.Setup(r => r.GetByCodeAsync("MIN100", default)).ReturnsAsync(coupon);
+        _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
+
+        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "MIN100");
+        var act = () => CreateHandler().Handle(cmd, default);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("*tối thiểu*");
+    }
+
+    [Fact]
+    public async Task Handle_CouponNoRemainingUsage_ThrowsConflictException()
+    {
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var cart = CartEntity.Create(userId);
+        cart.AddItem(productId, 1, 100m);
+        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var coupon = Coupon.Create("LIMITED", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 1, "desc", 50);
+        // Đã dùng hết lượt
+        typeof(Coupon).GetProperty("UsedQuantity")!.SetValue(coupon, 1);
+
+        _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        _couponRepo.Setup(r => r.GetByCodeAsync("LIMITED", default)).ReturnsAsync(coupon);
+        _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
+
+        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "LIMITED");
+        var act = () => CreateHandler().Handle(cmd, default);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("*hết lượt*");
+    }
 }

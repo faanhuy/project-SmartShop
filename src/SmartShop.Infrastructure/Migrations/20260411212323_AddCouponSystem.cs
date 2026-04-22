@@ -11,86 +11,62 @@ namespace SmartShop.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Coupons",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    DiscountType = table.Column<int>(type: "int", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    DiscountValue = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    MaxUsage = table.Column<int>(type: "int", nullable: false),
-                    UsedQuantity = table.Column<int>(type: "int", nullable: false),
-                    MinOrderValue = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Coupons", x => x.Id);
-                });
 
-            migrationBuilder.CreateTable(
-                name: "CouponUsages",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CouponId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CouponUsages", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Coupons_CouponId",
-                        column: x => x.CouponId,
-                        principalTable: "Coupons",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
+            migrationBuilder.Sql(@"
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Coupons]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[Coupons] (
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [DiscountType] int NOT NULL,
+        [Code] nvarchar(50) NOT NULL,
+        [DiscountValue] decimal(18,2) NOT NULL,
+        [ExpiresAt] datetime2 NOT NULL,
+        [MaxUsage] int NOT NULL,
+        [UsedQuantity] int NOT NULL,
+        [MinOrderValue] decimal(18,2) NOT NULL,
+        [Description] nvarchar(max) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAt] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL
+    )
+END
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Coupons_Code",
-                table: "Coupons",
-                column: "Code",
-                unique: true);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Coupons_Code')
+BEGIN
+    CREATE UNIQUE INDEX [IX_Coupons_Code] ON [dbo].[Coupons] ([Code])
+END
 
-            migrationBuilder.CreateIndex(
-                name: "IX_CouponUsages_CouponId_UserId",
-                table: "CouponUsages",
-                columns: new[] { "CouponId", "UserId" },
-                unique: true);
+");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_CouponUsages_OrderId",
-                table: "CouponUsages",
-                column: "OrderId");
+            migrationBuilder.Sql(@"
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CouponUsages]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[CouponUsages] (
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [UserId] uniqueidentifier NOT NULL,
+        [OrderId] uniqueidentifier NOT NULL,
+        [CouponId] uniqueidentifier NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAt] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL
+    )
+END
 
-            migrationBuilder.CreateIndex(
-                name: "IX_CouponUsages_UserId",
-                table: "CouponUsages",
-                column: "UserId");
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_CouponUsages_CouponId_UserId')
+BEGIN
+    CREATE UNIQUE INDEX [IX_CouponUsages_CouponId_UserId] ON [dbo].[CouponUsages] ([CouponId], [UserId])
+END
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_CouponUsages_OrderId')
+BEGIN
+    CREATE INDEX [IX_CouponUsages_OrderId] ON [dbo].[CouponUsages] ([OrderId])
+END
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_CouponUsages_UserId')
+BEGIN
+    CREATE INDEX [IX_CouponUsages_UserId] ON [dbo].[CouponUsages] ([UserId])
+END
+");
         }
 
         /// <inheritdoc />

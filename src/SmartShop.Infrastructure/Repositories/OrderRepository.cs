@@ -62,4 +62,101 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     {
         await context.Orders.AddAsync(order, ct);
     }
+
+    public async Task<(decimal TotalRevenue, int TotalOrders, decimal AverageOrderValue)> GetRevenueSummaryAsync(
+        DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        var query = context.Orders
+            .Where(o => o.Status != OrderStatus.Cancelled
+                        && o.CreatedAt.Date >= from.Date
+                        && o.CreatedAt.Date <= to.Date);
+
+        var totalOrders = await query.CountAsync(ct);
+        var totalRevenue = totalOrders > 0
+            ? await query.SumAsync(o => o.TotalAmount, ct)
+            : 0m;
+        var averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0m;
+
+        return (totalRevenue, totalOrders, averageOrderValue);
+    }
+
+    public async Task<(decimal PrevRevenue, int PrevOrders)> GetPrevPeriodSummaryAsync(
+        DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        var duration = to - from;
+        var prevFrom = from - duration;
+        var prevTo = from;
+
+        var query = context.Orders
+            .Where(o => o.Status != OrderStatus.Cancelled
+                        && o.CreatedAt.Date >= prevFrom.Date
+                        && o.CreatedAt.Date < prevTo.Date);
+
+        var prevOrders = await query.CountAsync(ct);
+        var prevRevenue = prevOrders > 0
+            ? await query.SumAsync(o => o.TotalAmount, ct)
+            : 0m;
+
+        return (prevRevenue, prevOrders);
+    }
+
+    public async Task<IEnumerable<(DateTime Date, decimal Revenue, int OrderCount)>> GetRevenueByDateAsync(
+        DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        var rows = await context.Orders
+            .Where(o => o.Status != OrderStatus.Cancelled
+                        && o.CreatedAt.Date >= from.Date
+                        && o.CreatedAt.Date <= to.Date)
+            .GroupBy(o => o.CreatedAt.Date)
+            .Select(g => new
+            {
+                Date = g.Key,
+                Revenue = g.Sum(o => o.TotalAmount),
+                OrderCount = g.Count()
+            })
+            .OrderBy(r => r.Date)
+            .ToListAsync(ct);
+
+        return rows.Select(r => (r.Date, r.Revenue, r.OrderCount));
+    }
+
+    public async Task<IEnumerable<(Guid ProductId, string ProductName, int TotalQuantity, decimal TotalRevenue)>> GetTopProductsAsync(
+        DateTime from, DateTime to, int limit, CancellationToken ct = default)
+    {
+        var rows = await context.Orders
+            .Where(o => o.Status != OrderStatus.Cancelled
+                        && o.CreatedAt.Date >= from.Date
+                        && o.CreatedAt.Date <= to.Date)
+            .SelectMany(o => o.Items)
+            .GroupBy(i => new { i.ProductId, i.ProductName })
+            .Select(g => new
+            {
+                g.Key.ProductId,
+                g.Key.ProductName,
+                TotalQuantity = g.Sum(i => i.Quantity),
+                TotalRevenue = g.Sum(i => i.UnitPrice * i.Quantity)
+            })
+            .OrderByDescending(r => r.TotalRevenue)
+            .Take(limit)
+            .ToListAsync(ct);
+
+        return rows.Select(r => (r.ProductId, r.ProductName, r.TotalQuantity, r.TotalRevenue));
+    }
+
+    public async Task<IEnumerable<(string Status, int Count)>> GetOrderStatusBreakdownAsync(
+        CancellationToken ct = default)
+    {
+        var rows = await context.Orders
+            .GroupBy(o => o.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return rows.Select(r => (r.Status.ToString(), r.Count));
+    }
+
+    public async Task<int> GetNewCustomersCountAsync(DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        return await context.Users
+            .CountAsync(u => u.CreatedAt.Date >= from.Date && u.CreatedAt.Date <= to.Date, ct);
+    }
 }
