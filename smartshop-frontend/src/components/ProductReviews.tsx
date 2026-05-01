@@ -103,7 +103,7 @@ export default function ProductReviews({ productId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-gray-800">Đánh giá sản phẩm</h2>
+          <h2 className="text-base font-semibold text-gray-800">Đánh giá món ăn</h2>
           {totalCount > 0 && (
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
               {totalCount} đánh giá
@@ -121,7 +121,7 @@ export default function ProductReviews({ productId }: Props) {
       {/* Form gửi đánh giá */}
       {isAuthenticated && !myReview && (
         <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
-          <p className="text-sm font-medium text-gray-700 mb-3">Viết đánh giá của bạn</p>
+          <p className="text-sm font-medium text-gray-700 mb-3">Chia sẻ cảm nhận về món này</p>
 
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xs text-gray-500">Đánh giá:</span>
@@ -132,7 +132,7 @@ export default function ProductReviews({ productId }: Props) {
           <textarea
             required
             rows={3}
-            placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+            placeholder="Món có vừa miệng không, giao có nhanh không, bạn thích điểm nào nhất?"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"

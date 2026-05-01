@@ -10,6 +10,7 @@ import GenerateDescriptionButton from '../components/GenerateDescriptionButton';
 import AdminLayout from '../components/AdminLayout';
 import ImageUploadField from '../components/common/ImageUploadField';
 import Pagination from '../components/common/Pagination';
+import { getImageUrl } from '../utils/imageUrl';
 
 const EMPTY_CREATE: CreateProductRequest = {
   name: '', description: '', price: 0, originalPrice: undefined,
@@ -74,9 +75,9 @@ export default function AdminProductPage() {
       setCreateKey((k) => k + 1);
       await loadProducts(1);
       setPage(1);
-      toast.success('Đã tạo sản phẩm.');
+      toast.success('Đã tạo món mới.');
     } catch (err) {
-      setCreateError(getApiError(err, 'Tạo sản phẩm thất bại.'));
+      setCreateError(getApiError(err, 'Tạo món thất bại.'));
     } finally {
       setCreating(false);
     }
@@ -108,9 +109,9 @@ export default function AdminProductPage() {
       });
       setEditProduct(null);
       await loadProducts(page);
-      toast.success('Đã cập nhật sản phẩm.');
+      toast.success('Đã cập nhật món ăn.');
     } catch (err) {
-      setEditError(getApiError(err, 'Cập nhật thất bại.'));
+      setEditError(getApiError(err, 'Cập nhật món thất bại.'));
     } finally {
       setEditing(false);
     }
@@ -118,13 +119,13 @@ export default function AdminProductPage() {
 
   /* ── Delete ── */
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Xoá sản phẩm "${name}"?`)) return;
+    if (!confirm(`Gỡ món "${name}" khỏi thực đơn?`)) return;
     try {
       await productService.deleteProduct(id);
       await loadProducts(page);
-      toast.success('Đã xoá sản phẩm.');
+      toast.success('Đã gỡ món khỏi thực đơn.');
     } catch {
-      toast.error('Xoá thất bại.');
+      toast.error('Gỡ món thất bại.');
     }
   };
 
@@ -135,7 +136,7 @@ export default function AdminProductPage() {
   }) => (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+        <label className="block text-sm font-medium text-gray-700">Mô tả món</label>
         <GenerateDescriptionButton
           productName={productName}
           categoryName={categoryName}
@@ -148,13 +149,13 @@ export default function AdminProductPage() {
   );
 
   return (
-    <AdminLayout title="Quản lý sản phẩm">
+    <AdminLayout title="Quản lý món ăn">
       <div className="flex justify-end mb-4">
         <button
           onClick={() => { setShowCreate(true); setCreateError(null); setCreateForm(EMPTY_CREATE); setCreateKey((k) => k + 1); }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
         >
-          + Thêm sản phẩm
+          + Thêm món
         </button>
       </div>
 
@@ -162,10 +163,10 @@ export default function AdminProductPage() {
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4">
-            <h2 className="text-lg font-semibold mb-4">Thêm sản phẩm mới</h2>
+            <h2 className="text-lg font-semibold mb-4">Thêm món mới</h2>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên sản phẩm</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên món</label>
                 <input required className={INPUT_CLS} value={createForm.name}
                   onChange={(e) => handleCreateNameChange(e.target.value)} />
               </div>
@@ -182,13 +183,13 @@ export default function AdminProductPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán (VNĐ)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán (VND)</label>
                   <input required type="number" min={1} className={INPUT_CLS}
                     value={createForm.price || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá gốc (VNĐ)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá niêm yết (VND)</label>
                   <input type="number" min={0} placeholder="Để trống = giá bán" className={INPUT_CLS}
                     value={createForm.originalPrice || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, originalPrice: Number(e.target.value) || undefined }))} />
@@ -196,16 +197,16 @@ export default function AdminProductPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tồn kho</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Số suất</label>
                   <input required type="number" min={0} className={INPUT_CLS}
                     value={createForm.stock || ''}
                     onChange={(e) => setCreateForm((f) => ({ ...f, stock: Number(e.target.value) }))} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm món</label>
                   <select required className={INPUT_CLS} value={createForm.categoryId}
                     onChange={(e) => setCreateForm((f) => ({ ...f, categoryId: e.target.value }))}>
-                    <option value="">-- Chọn danh mục --</option>
+                    <option value="">-- Chọn nhóm món --</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
@@ -218,7 +219,7 @@ export default function AdminProductPage() {
               {createError && <p className="text-sm text-red-500">{createError}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowCreate(false)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Huỷ</button>
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
                 <button type="submit" disabled={creating}
                   className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
                   {creating ? 'Đang lưu...' : 'Lưu'}
@@ -233,11 +234,11 @@ export default function AdminProductPage() {
       {editProduct && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 my-4">
-            <h2 className="text-lg font-semibold mb-1">Chỉnh sửa sản phẩm</h2>
+            <h2 className="text-lg font-semibold mb-1">Chỉnh sửa món ăn</h2>
             <p className="text-xs text-gray-400 mb-4 font-mono">{editProduct.slug}</p>
             <form onSubmit={handleEdit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên sản phẩm</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên món</label>
                 <input required className={INPUT_CLS} value={editForm.name}
                   onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} />
               </div>
@@ -249,13 +250,13 @@ export default function AdminProductPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán (VNĐ)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán (VND)</label>
                   <input required type="number" min={1} className={INPUT_CLS}
                     value={editForm.price || ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, price: Number(e.target.value) }))} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá gốc (VNĐ)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá niêm yết (VND)</label>
                   <input type="number" min={0} placeholder="Để trống = giữ nguyên" className={INPUT_CLS}
                     value={editForm.originalPrice ?? ''}
                     onChange={(e) => setEditForm((f) => ({ ...f, originalPrice: Number(e.target.value) || null }))} />
@@ -269,7 +270,7 @@ export default function AdminProductPage() {
               {editError && <p className="text-sm text-red-500">{editError}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setEditProduct(null)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Huỷ</button>
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
                 <button type="submit" disabled={editing}
                   className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60">
                   {editing ? 'Đang lưu...' : 'Cập nhật'}
@@ -289,10 +290,11 @@ export default function AdminProductPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Sản phẩm</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Ảnh</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Món ăn</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Giá bán</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Giá gốc</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Tồn kho</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Giá niêm yết</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Số suất</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Trạng thái</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Thao tác</th>
                 </tr>
@@ -300,6 +302,15 @@ export default function AdminProductPage() {
               <tbody className="divide-y divide-gray-100">
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="h-14 w-14 overflow-hidden rounded-xl bg-gray-100">
+                        {p.imageUrl ? (
+                          <img src={getImageUrl(p.imageUrl)} alt={p.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-lg text-gray-300">🍔</div>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-800 line-clamp-1">{p.name}</div>
                       <div className="text-xs text-gray-400 font-mono">{p.slug}</div>
@@ -317,7 +328,7 @@ export default function AdminProductPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                        {p.isActive ? 'Đang bán' : 'Đã ẩn'}
+                        {p.isActive ? 'Đang phục vụ' : 'Đã ẩn'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right space-x-3">
@@ -326,7 +337,7 @@ export default function AdminProductPage() {
                       <button onClick={() => openEdit(p)}
                         className="text-yellow-600 hover:underline text-xs">Sửa</button>
                       <button onClick={() => handleDelete(p.id, p.name)}
-                        className="text-red-500 hover:underline text-xs">Xoá</button>
+                        className="text-red-500 hover:underline text-xs">Gỡ</button>
                     </td>
                   </tr>
                 ))}

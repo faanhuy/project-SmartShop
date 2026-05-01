@@ -6,6 +6,7 @@ import { orderService } from '../services/orderService';
 import type { OrderDto, OrderStatusValue } from '../types/order';
 import { ORDER_STATUSES, resolveOrderStatus } from '../types/order';
 import { formatPrice, formatDateTime } from '../utils/formatters';
+import { getImageUrl } from '../utils/imageUrl';
 import Pagination from '../components/common/Pagination';
 
 const PAGE_SIZE = 20;
@@ -26,7 +27,7 @@ export default function AdminOrderPage() {
       setAllOrders(result.items);
       setTotalCount(result.totalCount);
     } catch {
-      toast.error('Không thể tải danh sách đơn hàng.');
+      toast.error('Không thể tải danh sách đơn giao.');
     } finally {
       setLoading(false);
     }
@@ -45,9 +46,9 @@ export default function AdminOrderPage() {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
       await loadOrders(page, statusFilter);
-      toast.success('Đã cập nhật trạng thái.');
+      toast.success('Đã cập nhật trạng thái đơn giao.');
     } catch {
-      toast.error('Cập nhật thất bại.');
+      toast.error('Cập nhật trạng thái thất bại.');
     } finally {
       setUpdatingId(null);
     }
@@ -56,7 +57,7 @@ export default function AdminOrderPage() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   return (
-    <AdminLayout title="Quản lý đơn hàng">
+    <AdminLayout title="Quản lý đơn giao">
       {/* Bộ lọc trạng thái */}
       <div className="flex gap-1.5 flex-wrap mb-4">
         <button
@@ -87,7 +88,7 @@ export default function AdminOrderPage() {
         ))}
       </div>
 
-      <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} đơn hàng</p>
+      <p className="text-xs text-gray-400 mb-3">Tổng {totalCount} đơn giao</p>
 
       {/* Bảng đơn hàng */}
       {loading ? (
@@ -96,7 +97,7 @@ export default function AdminOrderPage() {
         <>
           <div className="bg-white rounded-xl border shadow-sm overflow-x-auto">
             {allOrders.length === 0 ? (
-              <p className="text-center text-gray-400 py-12">Không có đơn hàng nào.</p>
+              <p className="text-center text-gray-400 py-12">Không có đơn giao nào.</p>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-gray-500 text-xs uppercase border-b">
@@ -165,7 +166,7 @@ export default function AdminOrderPage() {
                           <tr className="bg-blue-50/40">
                             <td colSpan={7} className="px-8 py-4">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                Chi tiết đơn · {order.items.length} sản phẩm
+                                Chi tiết đơn · {order.items.length} món
                               </p>
                               {order.notes && (
                                 <p className="text-xs text-gray-500 mb-3 italic">Ghi chú: {order.notes}</p>
@@ -173,6 +174,7 @@ export default function AdminOrderPage() {
                               <table className="w-full text-xs">
                                 <thead>
                                   <tr className="text-gray-400 text-left border-b border-blue-100">
+                                    <th className="pb-1.5 font-medium pr-4">Ảnh</th>
                                     <th className="pb-1.5 font-medium pr-4">Sản phẩm</th>
                                     <th className="pb-1.5 font-medium text-right pr-4">Đơn giá</th>
                                     <th className="pb-1.5 font-medium text-center pr-4">SL</th>
@@ -182,6 +184,19 @@ export default function AdminOrderPage() {
                                 <tbody className="divide-y divide-blue-100/60">
                                   {order.items.map((item) => (
                                     <tr key={item.productId}>
+                                      <td className="py-1.5 pr-4">
+                                        <div className="h-10 w-10 overflow-hidden rounded-md border border-blue-100 bg-white">
+                                          {item.productImageUrl ? (
+                                            <img
+                                              src={getImageUrl(item.productImageUrl)}
+                                              alt={item.productName}
+                                              className="h-full w-full object-cover"
+                                            />
+                                          ) : (
+                                            <div className="flex h-full w-full items-center justify-center text-sm">🍔</div>
+                                          )}
+                                        </div>
+                                      </td>
                                       <td className="py-1.5 pr-4 text-gray-700 font-medium">{item.productName}</td>
                                       <td className="py-1.5 pr-4 text-right text-gray-500">{formatPrice(item.unitPrice)}</td>
                                       <td className="py-1.5 pr-4 text-center text-gray-600">×{item.quantity}</td>

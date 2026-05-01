@@ -1,6 +1,8 @@
-# SmartShop
+# FastFood
 
-A full-stack e-commerce platform built with .NET 8 Clean Architecture and React 19, featuring AI-powered product search, recommendations, and description generation.
+A full-stack food ordering platform built with .NET 8 Clean Architecture and React 19, featuring AI-powered product search, recommendations, and description generation.
+
+Brand hiển thị hiện tại là `FastFood`; các tên kỹ thuật trong solution, thư mục và build script vẫn tạm giữ `SmartShop` để tránh phá vỡ luồng build/deploy hiện có.
 
 ![CI](https://github.com/YOUR_USERNAME/SmartShop/actions/workflows/ci.yml/badge.svg)
 ![CD](https://github.com/YOUR_USERNAME/SmartShop/actions/workflows/cd.yml/badge.svg)

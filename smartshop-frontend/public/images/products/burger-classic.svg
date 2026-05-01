@@ -1,0 +1,19 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#FFF7ED"/>
+  <circle cx="1000" cy="150" r="120" fill="#FDBA74" fill-opacity="0.7"/>
+  <circle cx="180" cy="760" r="150" fill="#FDE68A" fill-opacity="0.45"/>
+  <text x="110" y="165" fill="#9A3412" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700">FastBite Signature</text>
+  <text x="110" y="245" fill="#C2410C" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="800">Burger</text>
+  <text x="110" y="305" fill="#7C2D12" font-family="Segoe UI, Arial, sans-serif" font-size="30">Seeded catalog artwork for burger items and combos</text>
+  <ellipse cx="600" cy="420" rx="235" ry="88" fill="#F59E0B"/>
+  <rect x="372" y="430" width="456" height="34" rx="17" fill="#FDE68A"/>
+  <rect x="342" y="472" width="516" height="44" rx="22" fill="#B91C1C"/>
+  <rect x="358" y="523" width="484" height="32" rx="16" fill="#16A34A"/>
+  <rect x="364" y="562" width="472" height="58" rx="29" fill="#7C2D12"/>
+  <rect x="388" y="636" width="424" height="58" rx="29" fill="#F59E0B"/>
+  <circle cx="468" cy="390" r="8" fill="#FEF3C7"/>
+  <circle cx="560" cy="370" r="8" fill="#FEF3C7"/>
+  <circle cx="650" cy="390" r="8" fill="#FEF3C7"/>
+  <circle cx="735" cy="372" r="8" fill="#FEF3C7"/>
+  <text x="110" y="790" fill="#C2410C" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">Burgers, burger combos and late-night menu</text>
+</svg>

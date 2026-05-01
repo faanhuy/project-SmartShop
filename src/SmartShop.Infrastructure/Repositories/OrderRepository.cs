@@ -17,6 +17,7 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
     {
         return await context.Orders
             .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(o => o.Id == id, ct);
     }
 
@@ -26,6 +27,7 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         var query = context.Orders
             .AsNoTracking()
             .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt);
 
@@ -44,6 +46,7 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         var query = context.Orders
             .AsNoTracking()
             .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
             .AsQueryable();
 
         if (statusFilter.HasValue)

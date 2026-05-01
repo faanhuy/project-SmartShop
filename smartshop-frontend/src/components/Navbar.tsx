@@ -42,8 +42,9 @@ export default function Navbar({ children }: NavbarProps) {
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link to="/products" className="text-xl font-bold text-blue-600 shrink-0">
-          SmartShop
+        <Link to="/products" className="shrink-0">
+          <span className="block text-xl font-bold text-orange-500">FastFood</span>
+          <span className="hidden sm:block text-[11px] text-gray-400">Giao mon nhanh trong ngay</span>
         </Link>
 
         {/* Center slot (search bar, etc.) */}

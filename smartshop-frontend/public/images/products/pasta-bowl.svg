@@ -1,0 +1,18 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#FFF8F1"/>
+  <circle cx="1005" cy="155" r="122" fill="#FCD34D" fill-opacity="0.45"/>
+  <circle cx="175" cy="760" r="150" fill="#FDBA74" fill-opacity="0.35"/>
+  <text x="110" y="165" fill="#9A3412" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700">Lunch Favourites</text>
+  <text x="110" y="245" fill="#EA580C" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="800">Pasta and Noodles</text>
+  <text x="110" y="305" fill="#7C2D12" font-family="Segoe UI, Arial, sans-serif" font-size="30">Artwork for pasta bowls, macaroni dishes and office lunch combos</text>
+  <ellipse cx="620" cy="590" rx="250" ry="110" fill="#E5E7EB"/>
+  <ellipse cx="620" cy="548" rx="220" ry="86" fill="#FFF7ED"/>
+  <path d="M470 500C500 452 536 434 568 446C602 458 618 506 650 516C686 528 726 478 770 488" stroke="#F59E0B" stroke-width="18" stroke-linecap="round"/>
+  <path d="M458 540C490 492 536 488 578 510C620 532 652 584 712 570C748 562 770 524 796 506" stroke="#F59E0B" stroke-width="18" stroke-linecap="round"/>
+  <path d="M468 578C508 548 546 556 594 582C646 610 708 630 764 600" stroke="#F59E0B" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="552" cy="520" r="16" fill="#DC2626"/>
+  <circle cx="640" cy="560" r="16" fill="#DC2626"/>
+  <circle cx="718" cy="528" r="16" fill="#16A34A"/>
+  <circle cx="602" cy="620" r="16" fill="#16A34A"/>
+  <text x="110" y="790" fill="#C2410C" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">Pasta, macaroni and weekday lunch bundles</text>
+</svg>

@@ -4,6 +4,7 @@ import { FiChevronLeft, FiChevronRight, FiAlertCircle } from 'react-icons/fi';
 import { aiService } from '../services/aiService';
 import type { ProductDto } from '../types/product';
 import { formatPrice } from '../utils/formatters';
+import { getImageUrl } from '../utils/imageUrl';
 
 interface RecommendationCarouselProps {
   productId: string;
@@ -36,7 +37,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   if (loading) {
     return (
       <div className="mt-8">
-        <h2 className="text-base font-semibold text-gray-800 mb-3">Sản phẩm tương tự</h2>
+        <h2 className="text-base font-semibold text-gray-800 mb-3">Món gợi ý cùng vị</h2>
         <div className="flex gap-4 overflow-hidden">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="w-48 shrink-0 rounded-xl bg-gray-100 animate-pulse h-56" />
@@ -49,7 +50,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   if (errorMsg) {
     return (
       <div className="mt-8">
-        <h2 className="text-base font-semibold text-gray-800 mb-3">Sản phẩm tương tự</h2>
+        <h2 className="text-base font-semibold text-gray-800 mb-3">Món gợi ý cùng vị</h2>
         <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
           <FiAlertCircle size={15} className="shrink-0" />
           <span>{errorMsg}</span>
@@ -63,7 +64,7 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-800">Sản phẩm tương tự</h2>
+        <h2 className="text-base font-semibold text-gray-800">Món gợi ý cùng vị</h2>
         <div className="flex gap-1">
           <button
             onClick={() => scroll('left')}
@@ -94,12 +95,12 @@ export default function RecommendationCarousel({ productId }: RecommendationCaro
             <div className="h-28 bg-gray-100 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
               {product.imageUrl ? (
                 <img
-                  src={product.imageUrl!}
+                  src={getImageUrl(product.imageUrl)}
                   alt={product.name}
                   className="h-full w-full object-contain"
                 />
               ) : (
-                <span className="text-4xl">📦</span>
+                <span className="text-4xl">🍔</span>
               )}
             </div>
             <p className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug">

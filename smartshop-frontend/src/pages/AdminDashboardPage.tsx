@@ -238,14 +238,14 @@ export default function AdminDashboardPage() {
 
   const statCards = [
     {
-      label: 'Sản phẩm',
+      label: 'Món ăn',
       value: stats?.totalProducts,
       icon: FiPackage,
       to: '/admin/products',
       iconCls: 'bg-blue-50 text-blue-600 border-blue-100',
     },
     {
-      label: 'Đơn hàng',
+      label: 'Đơn giao',
       value: stats?.totalOrders,
       icon: FiShoppingBag,
       to: '/admin/orders',
@@ -418,10 +418,7 @@ export default function AdminDashboardPage() {
                       v.length > 18 ? v.slice(0, 17) + '…' : v
                     }
                   />
-                  <Tooltip
-                    formatter={(value: number) => [`${value} sản phẩm`, 'Đã bán']}
-                    contentStyle={{ fontSize: 12 }}
-                  />
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
                   <Bar dataKey="totalQuantity" fill="#9a0718" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -453,10 +450,7 @@ export default function AdminDashboardPage() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => [value, name]}
-                    contentStyle={{ fontSize: 12 }}
-                  />
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
                   <Legend
                     iconType="circle"
                     iconSize={8}
@@ -476,14 +470,14 @@ export default function AdminDashboardPage() {
           className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">Quản lý sản phẩm</h3>
+            <h3 className="font-semibold text-gray-800">Quản lý món ăn</h3>
             <FiArrowRight
               size={16}
               className="text-gray-400 group-hover:text-blue-600 transition-colors"
             />
           </div>
           <p className="text-sm text-gray-500">
-            Thêm, chỉnh sửa, xóa sản phẩm. Quản lý tồn kho và trạng thái hiển thị.
+            Thêm, chỉnh sửa, gỡ món và cập nhật số suất phục vụ trong ngày.
           </p>
         </Link>
 
@@ -492,14 +486,14 @@ export default function AdminDashboardPage() {
           className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">Quản lý đơn hàng</h3>
+            <h3 className="font-semibold text-gray-800">Quản lý đơn giao</h3>
             <FiArrowRight
               size={16}
               className="text-gray-400 group-hover:text-blue-600 transition-colors"
             />
           </div>
           <p className="text-sm text-gray-500">
-            Xem tất cả đơn hàng, cập nhật trạng thái. Lọc theo tiến trình xử lý.
+            Theo dõi đơn, cập nhật trạng thái bếp và giao hàng theo từng bước.
           </p>
         </Link>
       </div>

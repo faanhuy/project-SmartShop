@@ -12,7 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "SmartShop API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "FastFood API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -61,7 +61,11 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.DocumentTitle = "FastFood API Docs";
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "FastFood API v1");
+    });
 
     await DbSeeder.SeedAsync(app.Services);
 }

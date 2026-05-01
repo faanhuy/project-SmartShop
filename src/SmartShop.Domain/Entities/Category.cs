@@ -35,5 +35,11 @@ public class Category : BaseAuditableEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Activate()
+    {
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Deactivate() => IsActive = false;
 }

@@ -56,7 +56,7 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
         <FiCpu className="text-blue-500 shrink-0" size={16} />
         <input
           className="flex-1 text-sm outline-none text-gray-800 placeholder-gray-400"
-          placeholder="Tìm kiếm thông minh bằng AI..."
+          placeholder="Tìm món bằng AI: burger bò, gà rán cay, pizza phô mai..."
           value={query}
           onChange={(e) => handleInput(e.target.value)}
         />
@@ -76,7 +76,7 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
           {errorMsg ? (
             <p className="px-4 py-3 text-sm text-red-500">{errorMsg}</p>
           ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-gray-500">Không tìm thấy kết quả phù hợp.</p>
+            <p className="px-4 py-3 text-sm text-gray-500">Không tìm thấy món phù hợp.</p>
           ) : (
             <ul>
               {results.map((item) => (
@@ -92,7 +92,7 @@ export default function AISearchBar({ onClose }: AISearchBarProps) {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-semibold text-blue-600">{formatPrice(item.price)}</p>
-                      <p className="text-xs text-gray-400">{Math.round(item.score * 100)}% phù hợp</p>
+                      <p className="text-xs text-gray-400">{Math.round(item.score * 100)}% hợp vị</p>
                     </div>
                   </Link>
                 </li>

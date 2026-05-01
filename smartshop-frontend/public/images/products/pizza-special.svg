@@ -1,0 +1,22 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#FFF7ED"/>
+  <circle cx="1010" cy="150" r="124" fill="#FCA5A5" fill-opacity="0.5"/>
+  <circle cx="170" cy="760" r="150" fill="#FCD34D" fill-opacity="0.35"/>
+  <text x="110" y="165" fill="#9A3412" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700">Stone Oven Picks</text>
+  <text x="110" y="245" fill="#DC2626" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="800">Pizza</text>
+  <text x="110" y="305" fill="#7C2D12" font-family="Segoe UI, Arial, sans-serif" font-size="30">Artwork for classic pizzas, seafood pizzas and party combos</text>
+  <circle cx="620" cy="520" r="215" fill="#F59E0B"/>
+  <circle cx="620" cy="520" r="180" fill="#FCD34D"/>
+  <path d="M620 520L768 356" stroke="#D97706" stroke-width="12"/>
+  <path d="M620 520L832 554" stroke="#D97706" stroke-width="12"/>
+  <path d="M620 520L672 724" stroke="#D97706" stroke-width="12"/>
+  <path d="M620 520L448 652" stroke="#D97706" stroke-width="12"/>
+  <path d="M620 520L430 416" stroke="#D97706" stroke-width="12"/>
+  <circle cx="568" cy="430" r="18" fill="#DC2626"/>
+  <circle cx="707" cy="464" r="18" fill="#DC2626"/>
+  <circle cx="672" cy="612" r="18" fill="#DC2626"/>
+  <circle cx="507" cy="565" r="18" fill="#16A34A"/>
+  <circle cx="570" cy="675" r="18" fill="#16A34A"/>
+  <circle cx="458" cy="475" r="18" fill="#7C3AED"/>
+  <text x="110" y="790" fill="#C2410C" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">Whole pizzas, mini pizzas and sharing boxes</text>
+</svg>

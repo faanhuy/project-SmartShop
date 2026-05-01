@@ -1,0 +1,18 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#FFF7FB"/>
+  <circle cx="1000" cy="150" r="120" fill="#F9A8D4" fill-opacity="0.45"/>
+  <circle cx="180" cy="760" r="150" fill="#C4B5FD" fill-opacity="0.35"/>
+  <text x="110" y="165" fill="#9D174D" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700">Sweet and Chill</text>
+  <text x="110" y="245" fill="#DB2777" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="800">Drinks and Desserts</text>
+  <text x="110" y="305" fill="#831843" font-family="Segoe UI, Arial, sans-serif" font-size="30">Artwork for milk tea, sodas, sundaes, tiramisu and cold add-ons</text>
+  <rect x="420" y="350" width="146" height="282" rx="46" fill="#E9D5FF"/>
+  <rect x="438" y="392" width="110" height="180" rx="28" fill="#A855F7"/>
+  <circle cx="494" cy="580" r="14" fill="#4C1D95"/>
+  <circle cx="462" cy="548" r="14" fill="#4C1D95"/>
+  <circle cx="526" cy="528" r="14" fill="#4C1D95"/>
+  <rect x="530" y="310" width="14" height="110" rx="7" fill="#FDE68A" transform="rotate(12 530 310)"/>
+  <path d="M720 404C770 360 850 370 884 438C918 506 878 608 804 636C730 664 646 614 632 544C620 488 660 454 720 404Z" fill="#FBCFE8"/>
+  <path d="M720 520C754 486 810 488 834 530C858 572 826 622 774 626C722 630 682 582 696 542C700 530 708 522 720 520Z" fill="#7C2D12"/>
+  <circle cx="804" cy="376" r="18" fill="#FFFFFF"/>
+  <text x="110" y="790" fill="#9D174D" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">Cold drinks, creamy desserts and sweet finishers</text>
+</svg>

@@ -10,9 +10,9 @@ interface AdminLayoutProps {
 
 const NAV_ITEMS = [
   { to: '/admin',          label: 'Tổng quan',  icon: FiGrid,        end: true  },
-  { to: '/admin/products', label: 'Sản phẩm',   icon: FiPackage,     end: false },
-  { to: '/admin/orders',   label: 'Đơn hàng',   icon: FiShoppingBag, end: false },
-  { to: '/admin/coupons',  label: 'Coupon',      icon: FiTag,         end: false },
+  { to: '/admin/products', label: 'Món ăn',     icon: FiPackage,     end: false },
+  { to: '/admin/orders',   label: 'Đơn giao',   icon: FiShoppingBag, end: false },
+  { to: '/admin/coupons',  label: 'Mã giảm giá', icon: FiTag,        end: false },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
@@ -24,7 +24,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
       <div className="px-5 py-4 border-b border-gray-700/60">
-        <p className="text-lg font-bold text-white">SmartShop</p>
+        <p className="text-lg font-bold text-white">FastFood</p>
         <span className="inline-block mt-1 text-[10px] font-semibold tracking-widest uppercase bg-blue-600 text-white px-2 py-0.5 rounded">
           Admin
         </span>
@@ -56,7 +56,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           to="/products"
           className="flex items-center gap-2 text-xs text-gray-400 hover:text-white"
         >
-          <FiExternalLink size={13} /> Về cửa hàng
+          <FiExternalLink size={13} /> Về trang đặt món
         </Link>
         <div className="flex items-center justify-between">
           <div className="min-w-0">

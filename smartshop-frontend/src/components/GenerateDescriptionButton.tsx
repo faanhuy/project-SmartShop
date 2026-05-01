@@ -18,7 +18,7 @@ export default function GenerateDescriptionButton({
 
   const handleGenerate = async () => {
     if (!productName.trim() || !categoryName.trim()) {
-      setError('Nhập tên sản phẩm và chọn danh mục trước khi tạo mô tả.');
+      setError('Nhập tên món và chọn nhóm món trước khi tạo mô tả.');
       return;
     }
     setGenerating(true);
@@ -45,7 +45,7 @@ export default function GenerateDescriptionButton({
         className="flex items-center gap-2 text-xs px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60 transition-colors"
       >
         <FiCpu size={13} />
-        {generating ? 'Đang tạo mô tả...' : 'Tạo mô tả bằng AI'}
+        {generating ? 'Đang tạo mô tả...' : 'Tạo mô tả món bằng AI'}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

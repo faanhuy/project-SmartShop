@@ -44,6 +44,7 @@ public class Product : BaseAuditableEntity
         Price = price;
         OriginalPrice = originalPrice ?? OriginalPrice;
         ImageUrl = imageUrl;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void ReduceStock(int quantity)
@@ -51,6 +52,12 @@ public class Product : BaseAuditableEntity
         if (quantity > Stock)
             throw new InvalidOperationException("Không đủ tồn kho.");
         Stock -= quantity;
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Deactivate() => IsActive = false;

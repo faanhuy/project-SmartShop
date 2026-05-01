@@ -27,6 +27,7 @@ public class GetOrderByIdQueryHandler(IOrderRepository orderRepository)
             {
                 ProductId = i.ProductId,
                 ProductName = i.ProductName,
+                ProductImageUrl = i.Product?.ImageUrl,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
                 SubTotal = i.SubTotal

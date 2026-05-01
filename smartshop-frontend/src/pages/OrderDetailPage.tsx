@@ -7,6 +7,7 @@ import type { OrderDto } from '../types/order';
 import { ORDER_STATUSES } from '../types/order';
 import { getApiError } from '../utils/errorHandler';
 import { formatPrice, formatDateTime } from '../utils/formatters';
+import { getImageUrl } from '../utils/imageUrl';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -22,20 +23,20 @@ export default function OrderDetailPage() {
     if (!id) return;
     orderService.getOrderById(id)
       .then(setOrder)
-      .catch(() => setError('Không tìm thấy đơn hàng.'))
+      .catch(() => setError('Không tìm thấy đơn giao.'))
       .finally(() => setLoading(false));
   }, [id]);
 
   const handleCancel = async () => {
     if (!order) return;
-    if (!confirm('Bạn có chắc muốn huỷ đơn hàng này?')) return;
+    if (!confirm('Bạn có chắc muốn huỷ đơn giao này?')) return;
     setCancelling(true);
     try {
       await orderService.cancelOrder(order.id);
       setOrder({ ...order, status: 'Cancelled' });
-      toast.success('Đã huỷ đơn hàng.');
+      toast.success('Đã huỷ đơn giao.');
     } catch (err) {
-      toast.error(getApiError(err, 'Huỷ đơn hàng thất bại.'));
+      toast.error(getApiError(err, 'Huỷ đơn giao thất bại.'));
     } finally {
       setCancelling(false);
     }
@@ -50,7 +51,7 @@ export default function OrderDetailPage() {
   if (error || !order) return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-8 text-center text-red-500">{error || 'Không tìm thấy đơn hàng.'}</div>
+      <div className="p-8 text-center text-red-500">{error || 'Không tìm thấy đơn giao.'}</div>
     </div>
   );
 
@@ -60,8 +61,8 @@ export default function OrderDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-2xl mx-auto p-6">
-        <button onClick={() => navigate('/orders')} className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-1.5 text-sm" title="Quay lại danh sách đơn hàng">
-          <FiArrowLeft size={16} /> Đơn hàng của tôi
+        <button onClick={() => navigate('/orders')} className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-1.5 text-sm" title="Quay lại danh sách đơn giao">
+          <FiArrowLeft size={16} /> Lịch sử đơn giao
         </button>
 
         <div className="flex items-center justify-between mb-6">
@@ -81,14 +82,27 @@ export default function OrderDetailPage() {
 
         <div className="space-y-3 mb-6">
           {order.items.map((item) => (
-            <div key={item.productId} className="flex justify-between items-center border-b pb-3">
-              <div>
-                <p className="font-medium">{item.productName}</p>
-                <p className="text-sm text-gray-500">
-                  {formatPrice(item.unitPrice)} × {item.quantity}
-                </p>
+            <div key={item.productId} className="flex items-center justify-between gap-3 border-b pb-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-100">
+                  {item.productImageUrl ? (
+                    <img
+                      src={getImageUrl(item.productImageUrl)}
+                      alt={item.productName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-2xl">🍔</div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{item.productName}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatPrice(item.unitPrice)} × {item.quantity}
+                  </p>
+                </div>
               </div>
-              <p className="font-semibold">{formatPrice(item.subTotal)}</p>
+              <p className="shrink-0 font-semibold">{formatPrice(item.subTotal)}</p>
             </div>
           ))}
         </div>
@@ -100,7 +114,7 @@ export default function OrderDetailPage() {
               disabled={cancelling}
               className="text-sm text-red-500 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
             >
-              {cancelling ? 'Đang huỷ...' : 'Huỷ đơn hàng'}
+              {cancelling ? 'Đang huỷ...' : 'Huỷ đơn'}
             </button>
           ) : <div />}
           <p className="text-xl font-bold text-blue-700">

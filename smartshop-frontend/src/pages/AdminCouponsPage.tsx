@@ -51,7 +51,7 @@ export default function AdminCouponsPage() {
     try {
       setCoupons(await couponService.getAll());
     } catch {
-      toast.error('Không thể tải danh sách coupon.');
+      toast.error('Không thể tải danh sách mã giảm giá.');
     } finally {
       setLoading(false);
     }
@@ -76,36 +76,36 @@ export default function AdminCouponsPage() {
         expiresAt: new Date(form.expiresAt).toISOString(),
       });
       setShowCreate(false);
-      toast.success('Đã tạo coupon.');
+      toast.success('Đã tạo mã giảm giá.');
       await load();
     } catch (err) {
-      setFormError(getApiError(err, 'Tạo coupon thất bại.'));
+      setFormError(getApiError(err, 'Tạo mã giảm giá thất bại.'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (code: string) => {
-    if (!confirm(`Xoá coupon "${code}"?`)) return;
+    if (!confirm(`Xoá mã giảm giá "${code}"?`)) return;
     try {
       await couponService.remove(code);
-      toast.success('Đã xoá coupon.');
+      toast.success('Đã xoá mã giảm giá.');
       await load();
     } catch {
-      toast.error('Xoá thất bại.');
+      toast.error('Xoá mã giảm giá thất bại.');
     }
   };
 
   const isExpired = (expiresAt: string) => new Date(expiresAt) < new Date();
 
   return (
-    <AdminLayout title="Quản lý coupon">
+    <AdminLayout title="Quản lý mã giảm giá">
       <div className="flex justify-end mb-4">
         <button
           onClick={openCreate}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
         >
-          + Tạo coupon
+          + Tạo mã giảm giá
         </button>
       </div>
 
@@ -113,10 +113,10 @@ export default function AdminCouponsPage() {
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 my-4">
-            <h2 className="text-lg font-semibold mb-4">Tạo coupon mới</h2>
+            <h2 className="text-lg font-semibold mb-4">Tạo mã giảm giá mới</h2>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mã coupon</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mã giảm giá</label>
                 <input
                   required
                   className={INPUT_CLS}
@@ -233,7 +233,7 @@ export default function AdminCouponsPage() {
                   disabled={saving}
                   className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
                 >
-                  {saving ? 'Đang lưu...' : 'Tạo coupon'}
+                  {saving ? 'Đang lưu...' : 'Tạo mã'}
                 </button>
               </div>
             </form>
@@ -246,7 +246,7 @@ export default function AdminCouponsPage() {
         <div className="flex items-center justify-center h-64 text-gray-400">Đang tải...</div>
       ) : coupons.length === 0 ? (
         <div className="flex items-center justify-center h-64 text-gray-400">
-          Chưa có coupon nào.
+          Chưa có mã giảm giá nào.
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm overflow-x-auto">

@@ -2,8 +2,10 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import type { ApiResponse, AuthResponse } from '../types/auth';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'https://localhost:7046/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5284/api',
+  baseURL: API_BASE_URL,
 });
 
 // Attach access token to every request
@@ -58,7 +60,7 @@ api.interceptors.response.use(
 
     try {
       const { data } = await axios.post<ApiResponse<AuthResponse>>(
-        `${import.meta.env.VITE_API_URL ?? 'http://localhost:5284/api'}/auth/refresh`,
+        `${API_BASE_URL}/auth/refresh`,
         { refreshToken }
       );
       const { token, refreshToken: newRefreshToken } = data.data;

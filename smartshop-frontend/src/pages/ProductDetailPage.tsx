@@ -10,6 +10,7 @@ import RecommendationCarousel from '../components/RecommendationCarousel';
 import ProductReviews from '../components/ProductReviews';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { getImageUrl } from '../utils/imageUrl';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -31,7 +32,7 @@ export default function ProductDetailPage() {
     productService
       .getProductBySlug(slug)
       .then(setProduct)
-      .catch(() => setError('Không tìm thấy sản phẩm.'))
+      .catch(() => setError('Không tìm thấy món ăn.'))
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -46,7 +47,7 @@ export default function ProductDetailPage() {
   if (error || !product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">{error ?? 'Không tìm thấy sản phẩm.'}</p>
+        <p className="text-gray-500">{error ?? 'Không tìm thấy món ăn.'}</p>
         <Link to="/products" className="text-blue-600 hover:text-blue-800" title="Quay lại danh sách">
           <FiArrowLeft size={20} />
         </Link>
@@ -60,10 +61,10 @@ export default function ProductDetailPage() {
     try {
       await cartService.addToCart(product!.id, quantity);
       refreshCartCount();
-      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+      toast.success(`Đã thêm ${quantity} phần vào giỏ món!`);
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
+      toast.error(msg ?? 'Thêm món vào giỏ thất bại.');
     } finally {
       setAddingToCart(false);
     }
@@ -78,7 +79,7 @@ export default function ProductDetailPage() {
       navigate('/checkout');
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
+      toast.error(msg ?? 'Thêm món vào giỏ thất bại.');
       setAddingToCart(false);
     }
   };
@@ -103,9 +104,9 @@ export default function ProductDetailPage() {
           <div className="md:w-2/5">
             <div className="bg-gray-100 rounded-xl h-64 md:h-80 flex items-center justify-center overflow-hidden">
               {product.imageUrl ? (
-                <img src={product.imageUrl!} alt={product.name} className="h-full w-full object-contain" />
+                <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-contain" />
               ) : (
-                <span className="text-gray-300 text-7xl">📦</span>
+                <span className="text-gray-300 text-7xl">🍔</span>
               )}
             </div>
           </div>
@@ -129,20 +130,27 @@ export default function ProductDetailPage() {
             <p className="mt-1 text-sm text-gray-500">
               {product.stock > 0 ? (
                 product.stock < 10 ? (
-                  <span className="text-orange-500">Còn {product.stock} sản phẩm</span>
+                  <span className="text-orange-500">Còn {product.stock} phần trong bếp</span>
                 ) : (
-                  <span className="text-green-600">Còn hàng ({product.stock})</span>
+                  <span className="text-green-600">Sẵn sàng phục vụ ({product.stock} phần)</span>
                 )
               ) : (
-                <span className="text-red-500">Hết hàng</span>
+                <span className="text-red-500">Tạm hết món</span>
               )}
             </p>
 
             <p className="mt-4 text-sm text-gray-600 leading-relaxed">{product.description}</p>
 
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-orange-100 px-3 py-1 font-medium text-orange-700">Chuẩn bị 15-20 phút</span>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">Giao nhanh nội thành</span>
+              <span className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700">Ăn nóng ngon hơn</span>
+            </div>
+
             {/* Quantity + Add to Cart */}
             {product.stock > 0 ? (
               <div className="mt-6 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-400">Số phần</p>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center border rounded-lg overflow-hidden">
                     <button
@@ -164,14 +172,14 @@ export default function ProductDetailPage() {
                     disabled={addingToCart}
                     className="flex-1 border border-blue-600 text-blue-600 rounded-lg py-2 text-sm font-medium hover:bg-blue-50 transition-colors disabled:opacity-50"
                   >
-                    {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                    {addingToCart ? 'Đang thêm...' : 'Thêm món'}
                   </button>
                   <button
                     onClick={handleBuyNow}
                     disabled={addingToCart}
                     className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    Mua ngay
+                    Đặt ngay
                   </button>
                 </div>
 

@@ -3,29 +3,29 @@ import { FiShoppingBag, FiMail, FiPhone, FiMapPin, FiGithub } from 'react-icons/
 
 export default function Footer() {
   return (
-    <footer className="bg-[#6C537A] text-gray-300 mt-auto">
+    <footer className="bg-[#2A1F1A] text-gray-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <FiShoppingBag className="text-white" size={22} />
-              <span className="text-white text-xl font-bold">SmartShop</span>
+              <FiShoppingBag className="text-orange-400" size={22} />
+              <span className="text-white text-xl font-bold">FastFood</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Nền tảng mua sắm thông minh với AI — tìm kiếm, gợi ý và mua hàng nhanh chóng.
+              Web đặt đồ ăn nhanh với AI gợi ý món, combo bán chạy và quy trình đặt hàng gọn nhẹ.
             </p>
           </div>
 
           {/* Shop */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Mua sắm</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Thực đơn</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><Link to="/products" className="hover:text-blue-400 transition-colors">Tất cả sản phẩm</Link></li>
-              <li><Link to="/products?sort=newest" className="hover:text-blue-400 transition-colors">Hàng mới về</Link></li>
-              <li><Link to="/cart" className="hover:text-blue-400 transition-colors">Giỏ hàng</Link></li>
-              <li><Link to="/checkout" className="hover:text-blue-400 transition-colors">Thanh toán</Link></li>
+              <li><Link to="/products" className="hover:text-orange-300 transition-colors">Toàn bộ món</Link></li>
+              <li><Link to="/products?sort=newest" className="hover:text-orange-300 transition-colors">Combo mới lên sóng</Link></li>
+              <li><Link to="/cart" className="hover:text-orange-300 transition-colors">Giỏ món</Link></li>
+              <li><Link to="/checkout" className="hover:text-orange-300 transition-colors">Xác nhận đơn</Link></li>
             </ul>
           </div>
 
@@ -33,10 +33,10 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Tài khoản</h4>
             <ul className="space-y-2.5 text-sm">
-              <li><Link to="/profile" className="hover:text-blue-400 transition-colors">Hồ sơ cá nhân</Link></li>
-              <li><Link to="/orders" className="hover:text-blue-400 transition-colors">Đơn hàng của tôi</Link></li>
-              <li><Link to="/login" className="hover:text-blue-400 transition-colors">Đăng nhập</Link></li>
-              <li><Link to="/register" className="hover:text-blue-400 transition-colors">Đăng ký</Link></li>
+              <li><Link to="/profile" className="hover:text-orange-300 transition-colors">Hồ sơ giao nhận</Link></li>
+              <li><Link to="/orders" className="hover:text-orange-300 transition-colors">Đơn giao của tôi</Link></li>
+              <li><Link to="/login" className="hover:text-orange-300 transition-colors">Đăng nhập</Link></li>
+              <li><Link to="/register" className="hover:text-orange-300 transition-colors">Đăng ký</Link></li>
             </ul>
           </div>
 
@@ -45,24 +45,24 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Liên hệ</h4>
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center gap-2">
-                <FiMail size={14} className="text-blue-400 shrink-0" />
+                <FiMail size={14} className="text-orange-300 shrink-0" />
                 <span>huyp18062000@gmail.com</span>
               </li>
               <li className="flex items-center gap-2">
-                <FiPhone size={14} className="text-blue-400 shrink-0" />
+                <FiPhone size={14} className="text-orange-300 shrink-0" />
                 <span>0355 609 145</span>
               </li>
               <li className="flex items-start gap-2">
-                <FiMapPin size={14} className="text-blue-400 shrink-0 mt-0.5" />
-                <span>Hồ Chí Minh, Việt Nam</span>
+                <FiMapPin size={14} className="text-orange-300 shrink-0 mt-0.5" />
+                <span>TP. Hồ Chí Minh, giao nội thành mỗi ngày</span>
               </li>
               <li className="flex items-center gap-2 mt-1">
-                <FiGithub size={14} className="text-blue-400 shrink-0" />
+                <FiGithub size={14} className="text-orange-300 shrink-0" />
                 <a
                   href="https://github.com/faanhuy/project-SmartShop"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-blue-400 transition-colors"
+                  className="hover:text-orange-300 transition-colors"
                 >
                   GitHub
                 </a>
@@ -73,7 +73,7 @@ export default function Footer() {
 
         {/* Divider + Bottom bar */}
         <div className="border-t border-gray-700 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-          <span>© {new Date().getFullYear()} SmartShop. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} FastFood. Giao đồ ăn nhanh mỗi ngày.</span>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span>Powered by .NET 8 + React 19 + HuyPD</span>

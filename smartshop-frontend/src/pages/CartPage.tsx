@@ -14,6 +14,7 @@ import CouponInput from '../components/CouponInput';
 import type { ValidateCouponResult } from '../services/couponService';
 import { couponSession } from '../utils/couponSession';
 import { couponService } from '../services/couponService';
+import { getImageUrl } from '../utils/imageUrl';
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartDto | null>(null);
@@ -47,7 +48,7 @@ export default function CartPage() {
       setAppliedCoupon(null);
       setAppliedCode('');
       couponSession.clear();
-      toast('Mã giảm giá đã bị gỡ vì đơn hàng không còn đủ điều kiện.', { icon: 'ℹ️' });
+      toast('Mã giảm giá đã bị gỡ vì giỏ món không còn đủ điều kiện.', { icon: 'ℹ️' });
     }
   };
 
@@ -107,12 +108,12 @@ export default function CartPage() {
       setCart(updated);
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
     } catch {
-      toast.error('Xoá sản phẩm thất bại.');
+      toast.error('Gỡ món thất bại.');
     }
   };
 
   const handleClear = async () => {
-    if (!confirm('Xoá toàn bộ giỏ hàng?')) return;
+    if (!confirm('Xóa toàn bộ giỏ món?')) return;
     try {
       await cartService.clearCart();
       setCart(null);
@@ -120,7 +121,7 @@ export default function CartPage() {
       setAppliedCode('');
       couponSession.clear();
     } catch {
-      toast.error('Xoá giỏ hàng thất bại.');
+      toast.error('Xóa giỏ món thất bại.');
     }
   };
 
@@ -148,9 +149,9 @@ export default function CartPage() {
       setCart(updated);
       setSuggestions((prev) => prev.filter((p) => p.id !== product.id));
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
-      toast.success(`Đã thêm "${product.name}" vào giỏ hàng`);
+      toast.success(`Đã thêm "${product.name}" vào giỏ món`);
     } catch (err) {
-      toast.error(getApiError(err, 'Thêm vào giỏ thất bại.'));
+      toast.error(getApiError(err, 'Thêm món vào giỏ thất bại.'));
     } finally {
       setAddingId(null);
     }
@@ -168,44 +169,52 @@ export default function CartPage() {
       <div id="cart-layout" className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row gap-8 justify-center items-start">
         {/* Cột trái: Giỏ hàng */}
         <div id="cart-main" className="flex-1 min-w-[350px] max-w-xl flex flex-col items-center">
-          <div className="flex items-center gap-4 mb-6 w-full">
-            <h1 id="cart-title" className="text-xl font-bold ml-8">Giỏ hàng của bạn:</h1>
+          <div className="flex items-center justify-between gap-4 mb-6 w-full">
+            <h1 id="cart-title" className="text-xl font-bold ml-8">Giỏ món của bạn:</h1>
+            {cart && cart.items.length > 0 && (
+              <button
+                onClick={handleClear}
+                className="rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-red-300 hover:text-red-500"
+              >
+                Xóa giỏ
+              </button>
+            )}
           </div>
           {error && <p className="text-red-500 mb-4">{error}</p>}
           {!cart || cart.items.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
-              <p className="text-lg mb-4">Giỏ hàng trống</p>
+              <p className="text-lg mb-4">Giỏ món đang trống</p>
               <button
                 onClick={() => navigate('/products')}
                 className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 flex items-center gap-2 mx-auto"
-                title="Tiếp tục mua sắm"
+                title="Tiếp tục đặt món"
               >
                 <FiPlus size={18} />
-                Tiếp tục mua sắm
+                Tiếp tục đặt món
               </button>
             </div>
           ) : (
             <div id="cart-content" className="max-w-lg w-full">
-              {/* Sản phẩm trong giỏ */}
+              {/* Món trong giỏ */}
               <div id="cart-items" className="space-y-4 mb-4 w-full">
                 {cart.items.map((item) => (
                   <div key={item.productId} className="flex gap-4 border rounded-lg p-4 items-start bg-white" id={`cart-item-${item.productId}`}>
                     <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
                       {item.productImageUrl ? (
-                        <img src={item.productImageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(item.productImageUrl)} alt={item.productName} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-base mb-1">{item.productName}</div>
-                      <div className="text-gray-500 text-sm mb-1">2x Gà Charsiu (New)<br />2x Gà giòn không cay<br />2x Coca</div>
+                      <div className="text-gray-500 text-sm mb-1">Chuẩn bị nóng hổi tại bếp FastFood và giao nhanh đến địa chỉ của bạn.</div>
                       <div className="flex gap-2 text-orange-600 font-bold items-center mb-1">
                         <span className="line-through text-gray-400 font-normal mr-2">{item.unitPrice.toLocaleString('vi-VN')} đ</span>
                         <span className="text-xl ml-2">{item.subTotal.toLocaleString('vi-VN')} đ</span>
                       </div>
                       <div className="flex gap-4 text-sm mt-1">
-                        <button className="text-orange-500 hover:underline" onClick={() => handleRemove(item.productId)}>Xoá</button>
+                        <button className="text-orange-500 hover:underline" onClick={() => handleRemove(item.productId)}>Gỡ món</button>
                       </div>
                     </div>
                     <div className="flex flex-col items-center gap-2">
@@ -249,16 +258,16 @@ export default function CartPage() {
                 onClick={() => navigate('/checkout')}
                 className="w-full bg-orange-500 text-white py-3 rounded-full font-bold text-lg 
                 hover:bg-orange-600 transition-colors mt-2">
-                Thanh toán
+                Xác nhận đặt món
               </button>
             </div>
           )}
         </div>
-        {/* Cột phải: Sản phẩm đề xuất */}
+        {/* Cot phai: Mon de xuat */}
         {suggestions.length > 0 && (
           <div id="cart-suggestion" className="w-full md:w-[380px] bg-white rounded-3xl shadow p-6 flex-shrink-0 border">
-            <h2 id="suggestion-title" className="text-lg font-semibold mb-1">Sản phẩm đề xuất</h2>
-            <p className="text-xs text-gray-400 mb-4">Bán chạy cùng danh mục hôm nay</p>
+            <h2 id="suggestion-title" className="text-lg font-semibold mb-1">Món gợi ý thêm</h2>
+            <p className="text-xs text-gray-400 mb-4">Bán chạy cùng nhóm món hôm nay</p>
             <div id="suggestion-list" className="divide-y max-h-[calc(100vh-240px)] overflow-y-auto">
               {suggestions.map((p) => (
                 <div key={p.id} className="flex gap-3 py-4 items-center">
@@ -267,7 +276,7 @@ export default function CartPage() {
                     className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity"
                   >
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                      <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">No img</div>
                     )}
@@ -291,7 +300,7 @@ export default function CartPage() {
                       className="mt-2 flex items-center gap-1.5 border border-orange-500 text-orange-500 rounded-full px-3 py-1 text-xs font-semibold hover:bg-orange-50 transition-colors disabled:opacity-50"
                     >
                       <FiShoppingCart size={12} />
-                      {addingId === p.id ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                      {addingId === p.id ? 'Đang thêm...' : 'Thêm món'}
                     </button>
                   </div>
                 </div>

@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 import { formatPrice } from '../utils/formatters';
+import { getImageUrl } from '../utils/imageUrl';
 
 export default function ProductListPage() {
   const navigate = useNavigate();
@@ -66,10 +67,10 @@ export default function ProductListPage() {
     try {
       await cartService.addToCart(product.id, 1);
       refreshCartCount();
-      toast.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
+      toast.success(`Đã thêm "${product.name}" vào giỏ món!`);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      toast.error(msg ?? 'Thêm vào giỏ hàng thất bại.');
+      toast.error(msg ?? 'Thêm món vào giỏ thất bại.');
     } finally {
       setAddingId(null);
     }
@@ -85,7 +86,7 @@ export default function ProductListPage() {
             <form onSubmit={handleSearch} className="flex-1 relative">
               <input
                 className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="Tìm kiếm sản phẩm..."
+                placeholder="Tìm burger, pizza, gà rán, trà sữa..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -99,7 +100,7 @@ export default function ProductListPage() {
           )}
           <button
             onClick={() => setAiMode(!aiMode)}
-            title={aiMode ? 'Tìm kiếm thường' : 'Tìm kiếm AI'}
+            title={aiMode ? 'Tìm món thường' : 'Tìm món bằng AI'}
             className={`shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
               aiMode
                 ? 'bg-blue-600 text-white border-blue-600'
@@ -115,14 +116,14 @@ export default function ProductListPage() {
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
         {/* Sidebar Categories */}
         <aside className="w-48 shrink-0">
-          <h3 className="font-semibold text-gray-700 mb-3">Danh mục</h3>
+          <h3 className="font-semibold text-gray-700 mb-3">Nhóm món</h3>
           <ul className="space-y-1">
             <li>
               <button
                 onClick={() => handleCategoryChange(undefined)}
                 className={`w-full text-left px-3 py-1.5 rounded text-sm ${!categoryId ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
               >
-                Tất cả
+                Tất cả món
               </button>
             </li>
             {categories.map((cat) => (
@@ -140,10 +141,18 @@ export default function ProductListPage() {
 
         {/* Main */}
         <main className="flex-1">
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 px-6 py-7 text-white shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-100">Fast delivery menu</p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Đặt đồ ăn nhanh, giao nóng hổi trong vài chạm</h1>
+            <p className="mt-2 max-w-2xl text-sm text-orange-50 sm:text-base">
+              Chọn burger, gà rán, pizza, mì Ý và đồ uống cho bữa trưa văn phòng, bữa tối nhẹ nhàng hoặc combo xem phim cuối tuần.
+            </p>
+          </div>
+
           {/* Toolbar: result count + sort */}
           <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
             <span className="text-sm text-gray-500">
-              {products && `Hiển thị ${products.items.length} / ${products.totalCount} sản phẩm`}
+              {products && `Hiển thị ${products.items.length} / ${products.totalCount} món ăn`}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
               <span className="text-sm text-gray-500 hidden sm:inline mr-1">Sắp xếp:</span>
@@ -213,9 +222,9 @@ export default function ProductListPage() {
                   >
                     <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center mb-3 overflow-hidden">
                       {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain" />
+                        <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-contain" />
                       ) : (
-                        <span className="text-gray-300 text-4xl">📦</span>
+                        <span className="text-gray-300 text-4xl">🍔</span>
                       )}
                     </div>
                     <p className="text-sm font-medium text-gray-800 line-clamp-2 flex-1">{product.name}</p>
@@ -226,17 +235,17 @@ export default function ProductListPage() {
                       )}
                     </div>
                     {product.stock < 5 && product.stock > 0 && (
-                      <p className="text-orange-500 text-xs mt-1">Còn {product.stock} sản phẩm</p>
+                      <p className="text-orange-500 text-xs mt-1">Còn nhận {product.stock} phần</p>
                     )}
                     {product.stock === 0 ? (
-                      <p className="mt-2 text-xs text-center text-gray-400 py-1">Hết hàng</p>
+                      <p className="mt-2 text-xs text-center text-gray-400 py-1">Tạm hết món</p>
                     ) : (
                       <button
                         onClick={(e) => handleQuickAdd(e, product)}
                         disabled={addingId === product.id}
                         className="mt-2 w-full text-xs bg-blue-600 text-white rounded-lg py-1.5 hover:bg-blue-700 disabled:opacity-50 transition-colors"
                       >
-                        {addingId === product.id ? 'Đang thêm...' : '+ Giỏ hàng'}
+                        {addingId === product.id ? 'Đang thêm...' : '+ Thêm món'}
                       </button>
                     )}
                   </Link>
