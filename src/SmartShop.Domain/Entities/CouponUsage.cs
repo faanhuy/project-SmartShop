@@ -17,9 +17,7 @@ namespace SmartShop.Domain.Entities
             {
                 UserId = userId,
                 OrderId = orderId,
-                CouponId = couponId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CouponId = couponId
             };
         }
         public User? User { get; private set; }

@@ -25,15 +25,13 @@ public class Review : BaseAuditableEntity
             UserId = userId,
             ProductId = productId,
             Rating = rating,
-            Comment = comment,
-            CreatedAt = DateTime.UtcNow
+            Comment = comment
         };
     }
 
     public void Approve()
     {
         IsApproved = true;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Update(int rating, string comment)
@@ -43,6 +41,5 @@ public class Review : BaseAuditableEntity
 
         Rating = rating;
         Comment = comment;
-        UpdatedAt = DateTime.UtcNow;
     }
 }

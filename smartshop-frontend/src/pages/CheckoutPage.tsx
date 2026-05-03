@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { orderService } from '../services/orderService';
 import { cartService } from '../services/cartService';
+import { addressService } from '../services/addressService';
+import { paymentService } from '../services/paymentService';
 import type { CartDto } from '../types/cart';
-import { FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
+import type { AddressDto, PaymentMethod } from '../types/order';
+import { FiArrowLeft, FiShoppingBag, FiMapPin } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { couponSession } from '../utils/couponSession';
@@ -19,11 +23,19 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
   const [cart, setCart] = useState<CartDto | null>(null);
   const [cartLoading, setCartLoading] = useState(true);
+
+  // Address picker
+  const [addresses, setAddresses] = useState<AddressDto[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [addrLoading, setAddrLoading] = useState(true);
+
+  // Payment method
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
+
   const navigate = useNavigate();
 
-  // Đọc coupon đã áp dụng từ sessionStorage
   const savedCoupon = couponSession.load();
-  const couponCode     = savedCoupon?.code ?? null;
+  const couponCode = savedCoupon?.code ?? null;
   const discountAmount = savedCoupon?.result.discountAmount ?? 0;
 
   useEffect(() => {
@@ -31,31 +43,71 @@ export default function CheckoutPage() {
       .then(setCart)
       .catch(() => {})
       .finally(() => setCartLoading(false));
+
+    addressService.getAll()
+      .then((list) => {
+        setAddresses(list);
+        const def = list.find((a) => a.isDefault) ?? list[0];
+        if (def) setSelectedAddressId(def.id);
+      })
+      .catch(() => {})
+      .finally(() => setAddrLoading(false));
   }, []);
+
+  const resolveShippingAddress = (): string => {
+    if (addresses.length > 0 && selectedAddressId) {
+      const addr = addresses.find((a) => a.id === selectedAddressId);
+      if (addr) {
+        return [addr.recipientName, addr.phone, addr.street, addr.ward, addr.district, addr.city]
+          .filter(Boolean)
+          .join(', ');
+      }
+    }
+    return shippingAddress.trim();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!shippingAddress.trim()) {
+    const resolved = resolveShippingAddress();
+    if (!resolved) {
       setError('Vui lòng nhập địa chỉ giao món.');
       return;
     }
     setLoading(true);
     setError('');
+
     try {
       const order = await orderService.placeOrder({
-        shippingAddress: shippingAddress.trim(),
+        shippingAddress: resolved,
         notes: notes.trim() || undefined,
-        couponCode: couponCode ?? "",
+        couponCode: couponCode ?? '',
+        paymentMethod,
       });
       couponSession.clear();
-      navigate(`/orders/${order.id}`, { replace: true });
+
+      if (paymentMethod === 'VNPay') {
+        const paymentUrl = await paymentService.createVNPayUrl(order.id);
+        window.location.href = paymentUrl;
+      } else if (paymentMethod === 'BankTransfer') {
+        toast.success('Đặt món thành công! Vui lòng chuyển khoản để xác nhận đơn.');
+        navigate(`/orders/${order.id}`, { replace: true, state: { showBankInfo: true } });
+      } else {
+        toast.success('Đặt món thành công!');
+        navigate(`/orders/${order.id}`, { replace: true });
+      }
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { errors?: string[] } } })?.response?.data?.errors?.[0];
-      setError(msg ?? 'Đặt món thất bại, vui lòng thử lại.');
+      const msg = (e as { response?: { data?: { message?: string; errors?: string[] } } })
+        ?.response?.data?.errors?.[0]
+        ?? (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Đặt món thất bại, vui lòng thử lại.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  const hasAddresses = addresses.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -65,9 +117,20 @@ export default function CheckoutPage() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left — Form */}
-          <div className="flex-1">
+          <div className="flex-1 space-y-4">
+            {/* Address section */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-base font-semibold text-gray-800 mb-4">Thông tin giao món</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-gray-800">Địa chỉ giao hàng</h2>
+                <Link
+                  to="/profile"
+                  state={{ tab: 'addresses' }}
+                  className="text-xs text-rose-600 hover:text-rose-700 flex items-center gap-1"
+                >
+                  <FiMapPin size={12} />
+                  Quản lý địa chỉ
+                </Link>
+              </div>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -75,11 +138,57 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {addrLoading ? (
+                <p className="text-sm text-gray-400">Đang tải địa chỉ...</p>
+              ) : hasAddresses ? (
+                <div className="space-y-2">
+                  {addresses.map((addr) => (
+                    <label
+                      key={addr.id}
+                      className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                        selectedAddressId === addr.id
+                          ? 'border-rose-400 bg-rose-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="address"
+                        value={addr.id}
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => setSelectedAddressId(addr.id)}
+                        className="mt-0.5 accent-rose-600"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-gray-800">{addr.recipientName}</span>
+                          <span className="text-sm text-gray-500">{addr.phone}</span>
+                          {addr.label && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
+                              {addr.label}
+                            </span>
+                          )}
+                          {addr.isDefault && (
+                            <span className="text-xs bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full">
+                              Mặc định
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                          {[addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              ) : (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Địa chỉ giao món <span className="text-red-500">*</span>
-                  </label>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Bạn chưa có địa chỉ đã lưu.{' '}
+                    <Link to="/profile" className="text-rose-600 hover:underline">
+                      Thêm địa chỉ
+                    </Link>
+                  </p>
                   <textarea
                     value={shippingAddress}
                     onChange={(e) => setShippingAddress(e.target.value)}
@@ -88,7 +197,97 @@ export default function CheckoutPage() {
                     placeholder="Số nhà, đường, phường/xã, quận/huyện, thành phố"
                   />
                 </div>
+              )}
+            </div>
 
+            {/* Payment method */}
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-base font-semibold text-gray-800 mb-4">Phương thức thanh toán</h2>
+              <div className="space-y-2">
+                <label
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                    paymentMethod === 'COD'
+                      ? 'border-rose-400 bg-rose-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="COD"
+                    checked={paymentMethod === 'COD'}
+                    onChange={() => setPaymentMethod('COD')}
+                    className="accent-rose-600"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Thanh toán khi nhận hàng (COD)</p>
+                    <p className="text-xs text-gray-500">Trả tiền mặt khi nhận món</p>
+                  </div>
+                </label>
+
+                <label
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                    paymentMethod === 'VNPay'
+                      ? 'border-rose-400 bg-rose-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="VNPay"
+                    checked={paymentMethod === 'VNPay'}
+                    onChange={() => setPaymentMethod('VNPay')}
+                    className="accent-rose-600"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Thanh toán qua VNPay</p>
+                    <p className="text-xs text-gray-500">QR Code / Thẻ ATM / Thẻ tín dụng</p>
+                  </div>
+                </label>
+
+                <label
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                    paymentMethod === 'BankTransfer'
+                      ? 'border-rose-400 bg-rose-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="BankTransfer"
+                    checked={paymentMethod === 'BankTransfer'}
+                    onChange={() => setPaymentMethod('BankTransfer')}
+                    className="accent-rose-600"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Chuyển khoản ngân hàng (ACB)</p>
+                    <p className="text-xs text-gray-500">Chuyển khoản sau khi đặt — đơn xác nhận sau khi nhận tiền</p>
+                  </div>
+                </label>
+
+                {paymentMethod === 'BankTransfer' && (
+                  <div className="mt-2 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm space-y-1.5">
+                    <p className="font-semibold text-amber-800">Thông tin chuyển khoản</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-amber-900">
+                      <span className="text-gray-500">Ngân hàng</span><span className="font-medium">ACB</span>
+                      <span className="text-gray-500">Số tài khoản</span>
+                      <span className="font-bold tracking-widest select-all">24817827</span>
+                      <span className="text-gray-500">Chủ tài khoản</span><span className="font-medium">SMARTSHOP</span>
+                    </div>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Nội dung CK: <span className="font-semibold">SmartShop + SĐT của bạn</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Notes & Actions */}
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-base font-semibold text-gray-800 mb-4">Thông tin thêm</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Ghi chú (tuỳ chọn)
@@ -102,7 +301,7 @@ export default function CheckoutPage() {
                   />
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => navigate('/cart')}
@@ -117,7 +316,11 @@ export default function CheckoutPage() {
                     className="flex-1 bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 font-semibold text-sm flex items-center justify-center gap-2"
                   >
                     <FiShoppingBag size={16} />
-                    {loading ? 'Đang xử lý...' : 'Xác nhận đặt món'}
+                    {loading
+                      ? paymentMethod === 'VNPay' ? 'Đang chuyển đến VNPay...' : 'Đang xử lý...'
+                      : paymentMethod === 'VNPay' ? 'Thanh toán qua VNPay'
+                      : paymentMethod === 'BankTransfer' ? 'Đặt món & Chuyển khoản'
+                      : 'Xác nhận đặt món'}
                   </button>
                 </div>
               </form>

@@ -13,6 +13,7 @@ import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import ProfilePage from '../pages/ProfilePage';
 import WishlistPage from '../pages/WishlistPage';
+import PaymentResultPage from '../pages/PaymentResultPage';
 import { useAuthStore } from '../store/authStore';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -112,6 +113,7 @@ const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
+  { path: '/payment/result', element: <PaymentResultPage /> },
   { path: '/', element: <Navigate to="/products" replace /> },
   { path: '*', element: <Navigate to="/products" replace /> },
 ]);

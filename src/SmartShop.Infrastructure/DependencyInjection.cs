@@ -10,6 +10,7 @@ using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure.Caching;
 using SmartShop.Infrastructure.Data;
 using SmartShop.Infrastructure.Email;
+using SmartShop.Infrastructure.Payment;
 using SmartShop.Infrastructure.Repositories;
 using SmartShop.Infrastructure.Services;
 using SmartShop.Infrastructure.UnitOfWork;
@@ -24,9 +25,10 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
-        );
+        services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+        {
+            options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+        });
 
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
@@ -44,6 +46,8 @@ public static class DependencyInjection
         services.AddScoped<IFaqDocumentRepository, FaqDocumentRepository>();
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
         services.AddScoped<IChatbotService, ChatbotService>();
+        services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+        services.AddScoped<IPaymentGateway, VNPayGateway>();
 
         // AI — chọn provider qua config "AI:Provider" (Groq | Gemini), mặc định Groq
         // Groq: free 500K tokens/day, llama-3.3-70b, nhanh, hiểu tiếng Việt tốt

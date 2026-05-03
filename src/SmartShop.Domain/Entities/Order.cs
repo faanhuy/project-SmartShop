@@ -14,6 +14,11 @@ public class Order : BaseAuditableEntity
     public decimal DiscountAmount { get; private set; }   // số tiền được giảm(= 0 nếu không dùng coupon)
     public string? CouponCode { get; private set; }       // mã đã dùng(nullable)
 
+    public PaymentMethod PaymentMethod { get; private set; } = PaymentMethod.COD;
+    public PaymentStatus PaymentStatus { get; private set; } = PaymentStatus.Pending;
+    public DateTime? PaidAt { get; private set; }
+    public string? VnpayTransactionId { get; private set; }
+
     public User? User { get; private set; }
 
     private readonly List<OrderItem> _items = [];
@@ -27,9 +32,26 @@ public class Order : BaseAuditableEntity
         {
             UserId = userId,
             ShippingAddress = shippingAddress,
-            Notes = notes,
-            CreatedAt = DateTime.UtcNow
+            Notes = notes
         };
+    }
+
+    public void SetPaymentMethod(PaymentMethod method)
+    {
+        PaymentMethod = method;
+    }
+
+    public void MarkAsPaid(string transactionId, DateTime paidAt)
+    {
+        PaymentStatus = PaymentStatus.Paid;
+        Status = OrderStatus.Confirmed;
+        VnpayTransactionId = transactionId;
+        PaidAt = paidAt;
+    }
+
+    public void MarkPaymentFailed()
+    {
+        PaymentStatus = PaymentStatus.Failed;
     }
 
     public void AddItem(OrderItem item)
@@ -47,14 +69,13 @@ public class Order : BaseAuditableEntity
     public void UpdateStatus(OrderStatus status)
     {
         Status = status;
-        UpdatedAt = DateTime.UtcNow;
     }
+
     public void ApplyCoupon(string couponCode, decimal discountAmount)
     {
         CouponCode = couponCode;
         DiscountAmount = discountAmount;
         TotalAmount = OriginalAmount - DiscountAmount;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Cancel()
@@ -63,6 +84,5 @@ public class Order : BaseAuditableEntity
             throw new InvalidOperationException("Không thể hủy đơn hàng đã giao.");
 
         Status = OrderStatus.Cancelled;
-        UpdatedAt = DateTime.UtcNow;
     }
 }

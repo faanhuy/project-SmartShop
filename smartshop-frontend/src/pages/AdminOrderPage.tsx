@@ -3,13 +3,80 @@ import toast from 'react-hot-toast';
 import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import AdminLayout from '../components/AdminLayout';
 import { orderService } from '../services/orderService';
-import type { OrderDto, OrderStatusValue } from '../types/order';
+import type { OrderDto, OrderStatusValue, PaymentMethod, PaymentStatus } from '../types/order';
 import { ORDER_STATUSES, resolveOrderStatus } from '../types/order';
 import { formatPrice, formatDateTime } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
 import Pagination from '../components/common/Pagination';
 
 const PAGE_SIZE = 20;
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  COD: 'COD',
+  VNPay: 'VNPay',
+  BankTransfer: 'ACB',
+};
+
+const PAYMENT_STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  Pending:   { label: 'Chờ TT',    cls: 'bg-yellow-100 text-yellow-700' },
+  Paid:      { label: 'Đã TT',     cls: 'bg-green-100 text-green-700'   },
+  Failed:    { label: 'Thất bại',  cls: 'bg-red-100 text-red-700'       },
+  Refunded:  { label: 'Hoàn tiền', cls: 'bg-gray-100 text-gray-600'     },
+};
+
+function PaymentCell({ method, status }: { method?: PaymentMethod; status?: PaymentStatus }) {
+  const methodLabel = method ? (PAYMENT_METHOD_LABEL[method] ?? method) : '—';
+  const st = status ? PAYMENT_STATUS_CONFIG[status] : null;
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-medium text-gray-700">{methodLabel}</span>
+      {st && (
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium w-fit ${st.cls}`}>
+          {st.label}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PaymentDetail({
+  method, status, paidAt, transactionId,
+}: {
+  method?: PaymentMethod;
+  status?: PaymentStatus;
+  paidAt?: string | null;
+  transactionId?: string | null;
+}) {
+  if (!method) return null;
+  const methodLabel = PAYMENT_METHOD_LABEL[method] ?? method;
+  const st = status ? PAYMENT_STATUS_CONFIG[status] : null;
+  return (
+    <div className="mb-3 inline-flex flex-wrap gap-x-6 gap-y-1 rounded-lg border border-rose-100 bg-white px-4 py-2.5 text-xs">
+      <div className="flex items-center gap-1.5 text-gray-500">
+        <span className="font-medium text-gray-700">Phương thức:</span>
+        <span>{methodLabel}</span>
+      </div>
+      {st && (
+        <div className="flex items-center gap-1.5 text-gray-500">
+          <span className="font-medium text-gray-700">Thanh toán:</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${st.cls}`}>{st.label}</span>
+        </div>
+      )}
+      {paidAt && (
+        <div className="flex items-center gap-1.5 text-gray-500">
+          <span className="font-medium text-gray-700">Thời gian TT:</span>
+          <span>{new Date(paidAt).toLocaleString('vi-VN')}</span>
+        </div>
+      )}
+      {transactionId && (
+        <div className="flex items-center gap-1.5 text-gray-500">
+          <span className="font-medium text-gray-700">Mã GD:</span>
+          <span className="font-mono">{transactionId}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminOrderPage() {
   const [allOrders,    setAllOrders]    = useState<OrderDto[]>([]);
@@ -142,6 +209,7 @@ export default function AdminOrderPage() {
                     <th className="px-4 py-3 text-left">Người đặt</th>
                     <th className="px-4 py-3 text-left hidden sm:table-cell">Địa chỉ</th>
                     <th className="px-4 py-3 text-right">Tổng tiền</th>
+                    <th className="px-4 py-3 text-left hidden lg:table-cell">Thanh toán</th>
                     <th className="px-4 py-3 text-left hidden md:table-cell">Ngày đặt</th>
                     <th className="px-4 py-3 text-left">Trạng thái</th>
                   </tr>
@@ -172,6 +240,9 @@ export default function AdminOrderPage() {
                           </td>
                           <td className="px-4 py-3 text-right font-semibold text-rose-600 whitespace-nowrap">
                             {formatPrice(order.totalAmount)}
+                          </td>
+                          <td className="px-4 py-3 hidden lg:table-cell">
+                            <PaymentCell method={order.paymentMethod} status={order.paymentStatus} />
                           </td>
                           <td className="px-4 py-3 text-gray-400 whitespace-nowrap text-xs hidden md:table-cell">
                             {formatDateTime(order.createdAt)}
@@ -210,13 +281,19 @@ export default function AdminOrderPage() {
 
                         {isExpanded && (
                           <tr className="bg-rose-50/40">
-                            <td colSpan={7} className="px-8 py-4">
+                            <td colSpan={8} className="px-8 py-4">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 Chi tiết đơn · {order.items.length} món
                               </p>
                               {order.notes && (
-                                <p className="text-xs text-gray-500 mb-3 italic">Ghi chú: {order.notes}</p>
+                                <p className="text-xs text-gray-500 mb-2 italic">Ghi chú: {order.notes}</p>
                               )}
+                              <PaymentDetail
+                                method={order.paymentMethod}
+                                status={order.paymentStatus}
+                                paidAt={order.paidAt}
+                                transactionId={order.vnpayTransactionId}
+                              />
                               <table className="w-full text-xs">
                                 <thead>
                                   <tr className="text-gray-400 text-left border-b border-rose-100">

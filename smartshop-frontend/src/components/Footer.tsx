@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiShoppingBag, FiMail, FiPhone, FiMapPin, FiGithub } from 'react-icons/fi';
+import { FiMail, FiPhone, FiMapPin, FiGithub } from 'react-icons/fi';
 
 export default function Footer() {
   return (
@@ -9,8 +9,22 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <FiShoppingBag className="text-amber-400" size={22} />
+            <div className="flex items-center gap-2.5 mb-3">
+              <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="footerLogoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#fb7185" />
+                    <stop offset="100%" stopColor="#f97316" />
+                  </linearGradient>
+                </defs>
+                <rect width="40" height="40" rx="14" fill="url(#footerLogoGrad)" />
+                <line x1="11" y1="9" x2="11" y2="31" stroke="white" strokeWidth="5" strokeLinecap="round" strokeOpacity="0.95" />
+                <line x1="29" y1="9" x2="29" y2="31" stroke="white" strokeWidth="5" strokeLinecap="round" strokeOpacity="0.95" />
+                <path d="M13.5 20 Q20 13.5 26.5 20" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none" strokeOpacity="0.95" />
+                <path d="M13 21.5 Q16 20 19.5 21.5 Q23 20 26.5 21.5" stroke="#86efac" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.85" />
+                <line x1="13" y1="23.5" x2="27" y2="23.5" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" />
+                <line x1="13.5" y1="26" x2="26.5" y2="26" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.9" />
+              </svg>
               <span className="text-white text-xl font-bold">FastFood</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">

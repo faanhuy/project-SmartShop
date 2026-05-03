@@ -26,10 +26,8 @@ public class Coupon : BaseAuditableEntity
             MaxUsage = maxUsage,
             MinOrderValue = minOrderValue,
             UsedQuantity = 0,
-            Description = description,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        }; 
+            Description = description
+        };
     }
 
     public void Update(DiscountType discountType, decimal discountValue, DateTime expiresAt, int maxUsage, string description, decimal minOrderValue)
@@ -40,7 +38,6 @@ public class Coupon : BaseAuditableEntity
         MaxUsage = maxUsage;
         MinOrderValue = minOrderValue;
         Description = description;
-        UpdatedAt = DateTime.UtcNow;
     }
     public decimal CalculateDiscount(decimal orderTotal)
     {

@@ -21,8 +21,7 @@ public class User : BaseAuditableEntity
             Email = email.ToLowerInvariant(),
             PasswordHash = passwordHash,
             FirstName = firstName,
-            LastName = lastName,
-            CreatedAt = DateTime.UtcNow
+            LastName = lastName
         };
     }
 
@@ -41,13 +40,11 @@ public class User : BaseAuditableEntity
     public void PromoteToAdmin()
     {
         Role = "Admin";
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void UpdateProfile(string firstName, string lastName)
     {
         FirstName = firstName;
         LastName = lastName;
-        UpdatedAt = DateTime.UtcNow;
     }
 }

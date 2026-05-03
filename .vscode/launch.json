@@ -24,10 +24,11 @@
             "cwd": "${workspaceFolder}/src/SmartShop.WebAPI",
             "launchSettingsProfile": "https",
             "stopAtEntry": false,
+            "justMyCode": true,
             "exceptionOptions": [
                 {
                     "exceptionFilter": "all",
-                    "breakMode": "unhandled"
+                    "breakMode": "never"
                 }
             ],
             "serverReadyAction": {

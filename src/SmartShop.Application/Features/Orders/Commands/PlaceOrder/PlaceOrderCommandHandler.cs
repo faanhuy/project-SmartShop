@@ -2,6 +2,7 @@ using MediatR;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Entities;
+using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Domain.Events;
 
@@ -40,6 +41,7 @@ public class PlaceOrderCommandHandler(
 
         // Create order
         var order = Order.Create(request.UserId, request.ShippingAddress, request.Notes);
+        order.SetPaymentMethod(request.PaymentMethod);
 
         foreach (var item in cart.Items)
         {
@@ -76,8 +78,6 @@ public class PlaceOrderCommandHandler(
 
             // Lưu thông tin sử dụng coupon
             var couponUsage = CouponUsage.Create(request.UserId, order.Id, coupon.Id);
-            couponUsage.CreatedBy = request.UserId.ToString();
-            couponUsage.UpdatedBy = request.UserId.ToString();
             await couponUsageRepository.AddAsync(couponUsage, cancellationToken);
             couponRepository.Update(coupon);
         }
@@ -116,6 +116,10 @@ public class PlaceOrderCommandHandler(
             ShippingAddress = order.ShippingAddress,
             CouponCode = order.CouponCode,
             Notes = order.Notes,
+            PaymentMethod = order.PaymentMethod.ToString(),
+            PaymentStatus = order.PaymentStatus.ToString(),
+            PaidAt = order.PaidAt,
+            VnpayTransactionId = order.VnpayTransactionId,
             Items = order.Items.Select(i => new OrderItemDto
             {
                 ProductId = i.ProductId,

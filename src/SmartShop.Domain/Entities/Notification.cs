@@ -23,14 +23,12 @@ public class Notification : BaseAuditableEntity
             Title = title,
             Message = message,
             IsRead = false,
-            OrderId = orderId,
-            CreatedAt = DateTime.UtcNow
+            OrderId = orderId
         };
     }
 
     public void MarkAsRead()
     {
         IsRead = true;
-        UpdatedAt = DateTime.UtcNow;
     }
 }

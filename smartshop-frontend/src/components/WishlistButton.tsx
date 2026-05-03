@@ -10,7 +10,7 @@ interface WishlistButtonProps {
 }
 
 export default function WishlistButton({ productId, className = '' }: WishlistButtonProps) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, refreshWishlistCount } = useAuthStore();
   const navigate = useNavigate();
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,10 +38,12 @@ export default function WishlistButton({ productId, className = '' }: WishlistBu
       if (isInWishlist) {
         await wishlistService.removeFromWishlist(productId);
         setIsInWishlist(false);
+        refreshWishlistCount();
         toast.success('Đã xóa khỏi danh sách yêu thích');
       } else {
         await wishlistService.addToWishlist(productId);
         setIsInWishlist(true);
+        refreshWishlistCount();
         toast.success('Đã thêm vào danh sách yêu thích');
       }
     } catch (error: any) {

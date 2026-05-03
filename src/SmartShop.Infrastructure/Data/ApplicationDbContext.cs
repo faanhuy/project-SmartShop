@@ -1,12 +1,23 @@
 using Microsoft.EntityFrameworkCore;
+using SmartShop.Application.Common.Interfaces;
+using SmartShop.Domain.Common;
 using SmartShop.Domain.Entities;
 
 namespace SmartShop.Infrastructure.Data;
 
 public class ApplicationDbContext : DbContext
 {
+    private readonly ICurrentUserService? _currentUserService;
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
+    }
+
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        ICurrentUserService currentUserService) : base(options)
+    {
+        _currentUserService = currentUserService;
     }
 
     public DbSet<User> Users { get; set; }
@@ -28,6 +39,40 @@ public class ApplicationDbContext : DbContext
     public DbSet<FaqDocument> FaqDocuments => Set<FaqDocument>();
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<UserAddress> UserAddresses { get; set; }
+
+    private static readonly TimeZoneInfo _vnTz =
+        TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+    private static DateTime NowVn() =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _vnTz);
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        string? currentUserId = null;
+        try { currentUserId = _currentUserService?.UserId; }
+        catch { /* unauthenticated context (background jobs, migrations) */ }
+
+        var now = NowVn();
+
+        foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedAt = now;
+                entry.Entity.CreatedBy = currentUserId;
+                entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedBy = currentUserId;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedBy = currentUserId;
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

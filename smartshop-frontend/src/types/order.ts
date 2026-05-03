@@ -7,6 +7,9 @@ export interface OrderItemDto {
   subTotal: number;
 }
 
+export type PaymentMethod = 'COD' | 'VNPay' | 'BankTransfer';
+export type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Refunded';
+
 export interface OrderDto {
   id: string;
   userId: string;
@@ -16,12 +19,30 @@ export interface OrderDto {
   notes: string | null;
   items: OrderItemDto[];
   createdAt: string;
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  paidAt?: string | null;
+  vnpayTransactionId?: string | null;
 }
 
 export interface PlaceOrderRequest {
   shippingAddress: string;
   notes?: string;
   couponCode?: string;
+  paymentMethod?: PaymentMethod;
+}
+
+export interface AddressDto {
+  id: string;
+  label: string;
+  recipientName: string;
+  phone: string;
+  street: string;
+  ward?: string;
+  district: string;
+  city: string;
+  isDefault: boolean;
+  createdAt: string;
 }
 
 export const ORDER_STATUSES = [

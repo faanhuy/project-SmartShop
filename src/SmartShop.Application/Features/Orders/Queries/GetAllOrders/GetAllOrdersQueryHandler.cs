@@ -21,6 +21,10 @@ public class GetCouponsQueryHandler(IOrderRepository orderRepository)
             TotalAmount     = o.TotalAmount,
             ShippingAddress = o.ShippingAddress,
             Notes           = o.Notes,
+            PaymentMethod   = o.PaymentMethod.ToString(),
+            PaymentStatus   = o.PaymentStatus.ToString(),
+            PaidAt          = o.PaidAt,
+            VnpayTransactionId = o.VnpayTransactionId,
             Items           = o.Items.Select(i => new OrderItemDto
             {
                 ProductId   = i.ProductId,

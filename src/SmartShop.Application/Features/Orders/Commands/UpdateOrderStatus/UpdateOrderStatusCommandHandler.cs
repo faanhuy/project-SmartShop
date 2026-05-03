@@ -61,6 +61,10 @@ public class UpdateOrderStatusCommandHandler(
             TotalAmount     = order.TotalAmount,
             ShippingAddress = order.ShippingAddress,
             Notes           = order.Notes,
+            PaymentMethod   = order.PaymentMethod.ToString(),
+            PaymentStatus   = order.PaymentStatus.ToString(),
+            PaidAt          = order.PaidAt,
+            VnpayTransactionId = order.VnpayTransactionId,
             Items           = order.Items.Select(i => new OrderItemDto
             {
                 ProductId   = i.ProductId,

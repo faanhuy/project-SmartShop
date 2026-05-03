@@ -17,8 +17,7 @@ public class WishlistItem : BaseAuditableEntity
         return new WishlistItem
         {
             UserId = userId,
-            ProductId = productId,
-            CreatedAt = DateTime.UtcNow
+            ProductId = productId
         };
     }
 }

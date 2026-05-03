@@ -39,7 +39,6 @@ public class PushSignalRNotificationHandler(
                 message: message,
                 orderId: notification.OrderId);
 
-            dbNotification.CreatedBy = notification.UserId;
             await notificationRepository.AddAsync(dbNotification, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

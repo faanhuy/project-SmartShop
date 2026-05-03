@@ -26,7 +26,6 @@ public class AddToWishlistCommandHandler(
             throw new ConflictException("Sản phẩm đã có trong danh sách yêu thích.");
 
         var item = WishlistItem.Create(userId, request.ProductId);
-        item.CreatedBy = userId;
         await wishlistRepository.AddAsync(item, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

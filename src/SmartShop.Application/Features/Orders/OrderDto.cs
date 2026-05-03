@@ -21,6 +21,10 @@ public class OrderDto
     public string ShippingAddress { get; init; } = string.Empty;
     public string? Notes { get; init; }
     public string? CouponCode { get; init; }
+    public string PaymentMethod { get; init; } = string.Empty;
+    public string PaymentStatus { get; init; } = string.Empty;
+    public DateTime? PaidAt { get; init; }
+    public string? VnpayTransactionId { get; init; }
     public List<OrderItemDto> Items { get; init; } = [];
     public DateTime CreatedAt { get; init; }
 }

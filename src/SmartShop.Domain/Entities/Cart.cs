@@ -19,8 +19,7 @@ public class Cart : BaseAuditableEntity
     {
         return new Cart
         {
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow
+            UserId = userId
         };
     }
 
@@ -28,24 +27,16 @@ public class Cart : BaseAuditableEntity
     {
         var existing = _items.FirstOrDefault(i => i.ProductId == productId);
         if (existing != null)
-        {
             existing.IncreaseQuantity(quantity);
-        }
         else
-        {
             _items.Add(CartItem.Create(Id, productId, quantity, unitPrice));
-        }
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void RemoveItem(Guid productId)
     {
         var item = _items.FirstOrDefault(i => i.ProductId == productId);
         if (item != null)
-        {
             _items.Remove(item);
-            UpdatedAt = DateTime.UtcNow;
-        }
     }
 
     public void UpdateItemQuantity(Guid productId, int quantity)
@@ -53,12 +44,10 @@ public class Cart : BaseAuditableEntity
         var item = _items.FirstOrDefault(i => i.ProductId == productId)
             ?? throw new InvalidOperationException("Sản phẩm không có trong giỏ hàng.");
         item.UpdateQuantity(quantity);
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Clear()
     {
         _items.Clear();
-        UpdatedAt = DateTime.UtcNow;
     }
 }

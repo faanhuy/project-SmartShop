@@ -21,8 +21,7 @@ public class Category : BaseAuditableEntity
         {
             Name = name,
             Slug = slug,
-            Description = description,
-            CreatedAt = DateTime.UtcNow
+            Description = description
         };
     }
 
@@ -32,13 +31,11 @@ public class Category : BaseAuditableEntity
         Slug = slug;
         Description = description;
         ImageUrl = imageUrl;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Activate()
     {
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Deactivate() => IsActive = false;

@@ -44,7 +44,6 @@ public class Product : BaseAuditableEntity
         Price = price;
         OriginalPrice = originalPrice ?? OriginalPrice;
         ImageUrl = imageUrl;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void ReduceStock(int quantity)
@@ -57,7 +56,6 @@ public class Product : BaseAuditableEntity
     public void Activate()
     {
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Deactivate() => IsActive = false;
