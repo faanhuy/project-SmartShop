@@ -10,6 +10,7 @@ public class CancelOrderCommandHandler(
     IOrderRepository orderRepository,
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
+    IStoreInventoryRepository storeInventoryRepository,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<CancelOrderCommand>
 {
@@ -39,6 +40,19 @@ public class CancelOrderCommandHandler(
             var usage = await couponUsageRepository.GetByOrderIdAsync(order.Id, cancellationToken);
             if (usage is not null)
                 couponUsageRepository.Delete(usage);
+        }
+
+        // Restore StoreInventory nếu order có StoreId
+        if (order.StoreId.HasValue)
+        {
+            foreach (var item in order.Items)
+            {
+                var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(
+                    order.StoreId.Value, item.ProductId, cancellationToken);
+
+                if (inventory is not null)
+                    inventory.RestoreStock(item.Quantity);
+            }
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

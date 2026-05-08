@@ -9,6 +9,9 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("UserId không hợp lệ.");
 
+        RuleFor(x => x.StoreId)
+            .NotEmpty().WithMessage("Vui lòng chọn chi nhánh.");
+
         RuleFor(x => x.ShippingAddress)
             .NotEmpty().WithMessage("Địa chỉ giao hàng không được để trống.")
             .MaximumLength(500).WithMessage("Địa chỉ giao hàng tối đa 500 ký tự.");

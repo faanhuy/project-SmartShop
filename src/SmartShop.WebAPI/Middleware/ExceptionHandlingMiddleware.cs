@@ -43,6 +43,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             ),
             NotFoundException nfe => (HttpStatusCode.NotFound, new List<string> { nfe.Message }),
             ConflictException ce => (HttpStatusCode.Conflict, new List<string> { ce.Message }),
+            ConcurrencyException cce => (HttpStatusCode.Conflict, new List<string> { cce.Message }),
             UnauthorizedException ue => (HttpStatusCode.Unauthorized, new List<string> { ue.Message }),
             ServiceUnavailableException sue => (HttpStatusCode.ServiceUnavailable, new List<string> { sue.Message }),
             _ => (HttpStatusCode.InternalServerError, internalErrors)

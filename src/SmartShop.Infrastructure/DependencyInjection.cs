@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IChatbotService, ChatbotService>();
         services.AddScoped<IUserAddressRepository, UserAddressRepository>();
         services.AddScoped<IPaymentGateway, VNPayGateway>();
+        services.AddScoped<IStoreRepository, StoreRepository>();
+        services.AddScoped<IStoreInventoryRepository, StoreInventoryRepository>();
 
         // AI — chọn provider qua config "AI:Provider" (Groq | Gemini), mặc định Groq
         // Groq: free 500K tokens/day, llama-3.3-70b, nhanh, hiểu tiếng Việt tốt

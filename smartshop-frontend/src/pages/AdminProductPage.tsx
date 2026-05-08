@@ -14,7 +14,7 @@ import { getImageUrl } from '../utils/imageUrl';
 
 const EMPTY_CREATE: CreateProductRequest = {
   name: '', description: '', price: 0, originalPrice: undefined,
-  stock: 0, categoryId: '', slug: '', imageUrl: '',
+  categoryId: '', slug: '', imageUrl: '',
 };
 
 const INPUT_CLS = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-400 focus:outline-none';
@@ -195,21 +195,13 @@ export default function AdminProductPage() {
                     onChange={(e) => setCreateForm((f) => ({ ...f, originalPrice: Number(e.target.value) || undefined }))} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Số suất</label>
-                  <input required type="number" min={0} className={INPUT_CLS}
-                    value={createForm.stock || ''}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, stock: Number(e.target.value) }))} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm món</label>
-                  <select required className={INPUT_CLS} value={createForm.categoryId}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, categoryId: e.target.value }))}>
-                    <option value="">-- Chọn nhóm món --</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm món</label>
+                <select required className={INPUT_CLS} value={createForm.categoryId}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, categoryId: e.target.value }))}>
+                  <option value="">-- Chọn nhóm món --</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
               </div>
               <ImageUploadField
                 key={createKey}
@@ -294,7 +286,6 @@ export default function AdminProductPage() {
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Món ăn</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Giá bán</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Giá niêm yết</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Số suất</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Trạng thái</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Thao tác</th>
                 </tr>
@@ -320,11 +311,6 @@ export default function AdminProductPage() {
                       {p.originalPrice > p.price ? (
                         <span className="line-through">{formatPrice(p.originalPrice)}</span>
                       ) : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={p.stock < 5 ? 'text-orange-500 font-medium' : 'text-gray-700'}>
-                        {p.stock}
-                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>

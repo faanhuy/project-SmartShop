@@ -1,10 +1,10 @@
 using MediatR;
-using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Application.Interfaces;
+using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
-using SmartShop.Domain.Interfaces;
 using SmartShop.Domain.Events;
+using SmartShop.Domain.Interfaces;
 
 namespace SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 
@@ -12,6 +12,8 @@ public class PlaceOrderCommandHandler(
     ICartRepository cartRepository,
     IOrderRepository orderRepository,
     IProductRepository productRepository,
+    IStoreRepository storeRepository,
+    IStoreInventoryRepository storeInventoryRepository,
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
     IUserRepository userRepository,
@@ -26,7 +28,16 @@ public class PlaceOrderCommandHandler(
         if (!cart.Items.Any())
             throw new ConflictException("Giỏ hàng đang trống.");
 
-        // Validate stock for all items
+        // Validate store tồn tại và đang active
+        var store = await storeRepository.GetByIdAsync(request.StoreId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Store), request.StoreId);
+
+        if (!store.IsActive)
+            throw new ConflictException("Chi nhánh đã tạm ngừng hoạt động.");
+
+        // Validate product IsActive, load products
+        var productIds = cart.Items.Select(i => i.ProductId).ToList();
+        var products = new Dictionary<Guid, Product>();
         foreach (var item in cart.Items)
         {
             var product = await productRepository.GetByIdAsync(item.ProductId, cancellationToken)
@@ -35,24 +46,31 @@ public class PlaceOrderCommandHandler(
             if (!product.IsActive)
                 throw new ConflictException($"Sản phẩm '{product.Name}' không còn bán.");
 
-            if (item.Quantity > product.Stock)
-                throw new ConflictException($"Sản phẩm '{product.Name}' chỉ còn {product.Stock} trong kho.");
+            products[item.ProductId] = product;
         }
 
-        // Create order
+        // Load tất cả StoreInventory trong 1 query
+        var inventories = (await storeInventoryRepository.GetByStoreAndProductsAsync(
+            request.StoreId, productIds, cancellationToken))
+            .ToDictionary(i => i.ProductId);
+
+        // Phase 1 — Validate stock (read-only)
+        ValidateStock(cart.Items, products, inventories);
+
+        // Tạo Order entity
         var order = Order.Create(request.UserId, request.ShippingAddress, request.Notes);
+        order.SetStoreId(request.StoreId);
         order.SetPaymentMethod(request.PaymentMethod);
 
         foreach (var item in cart.Items)
         {
-            var product = await productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-            var orderItem = OrderItem.Create(order.Id, item.ProductId, product!.Name, item.Quantity, item.UnitPrice);
+            var product = products[item.ProductId];
+            var orderItem = OrderItem.Create(order.Id, item.ProductId, product.Name, item.Quantity, item.UnitPrice);
             order.AddItem(orderItem);
-
-            // Reduce stock
-            product.ReduceStock(item.Quantity);
-            productRepository.Update(product);
         }
+
+        // Phase 2 — Deduct stock (sort by ProductId để tránh deadlock)
+        DeductStock(cart.Items, inventories);
 
         if (!string.IsNullOrEmpty(request.CouponCode))
         {
@@ -76,7 +94,6 @@ public class PlaceOrderCommandHandler(
             order.ApplyCoupon(coupon.Code, discountAmount);
             coupon.Use();
 
-            // Lưu thông tin sử dụng coupon
             var couponUsage = CouponUsage.Create(request.UserId, order.Id, coupon.Id);
             await couponUsageRepository.AddAsync(couponUsage, cancellationToken);
             couponRepository.Update(coupon);
@@ -84,12 +101,33 @@ public class PlaceOrderCommandHandler(
 
         await orderRepository.AddAsync(order, cancellationToken);
 
-        // Clear cart after successful order
         cart.Clear();
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ConcurrencyException)
+        {
+            // Retry once: reload fresh inventories → validate → deduct → save
+            var freshInventories = (await storeInventoryRepository.GetByStoreAndProductsAsync(
+                request.StoreId, productIds, cancellationToken))
+                .ToDictionary(i => i.ProductId);
 
-        // Publish event for email + notifications (fire-and-forget style via MediatR)
+            ValidateStock(cart.Items, products, freshInventories);
+            DeductStock(cart.Items, freshInventories);
+
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (ConcurrencyException)
+            {
+                throw new ConflictException("Sản phẩm vừa hết hàng, vui lòng thử lại.");
+            }
+        }
+
+        // Publish event for email + notifications
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is not null)
         {
@@ -130,5 +168,33 @@ public class PlaceOrderCommandHandler(
             }).ToList(),
             CreatedAt = order.CreatedAt
         };
+    }
+
+    private static void ValidateStock(
+        IEnumerable<CartItem> items,
+        Dictionary<Guid, Product> products,
+        Dictionary<Guid, StoreInventory> inventories)
+    {
+        foreach (var item in items)
+        {
+            var productName = products.TryGetValue(item.ProductId, out var p) ? p.Name : item.ProductId.ToString();
+
+            if (!inventories.TryGetValue(item.ProductId, out var inventory))
+                throw new ConflictException($"Sản phẩm '{productName}' không có trong kho chi nhánh này.");
+
+            if (item.Quantity > inventory.Quantity)
+                throw new ConflictException(
+                    $"Sản phẩm '{productName}' chỉ còn {inventory.Quantity} trong kho.");
+        }
+    }
+
+    private static void DeductStock(
+        IEnumerable<CartItem> items,
+        Dictionary<Guid, StoreInventory> inventories)
+    {
+        foreach (var item in items.OrderBy(i => i.ProductId))
+        {
+            inventories[item.ProductId].DeductStock(item.Quantity);
+        }
     }
 }

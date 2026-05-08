@@ -7,6 +7,8 @@ import AdminDashboardPage from '../pages/AdminDashboardPage';
 import AdminProductPage from '../pages/AdminProductPage';
 import AdminOrderPage from '../pages/AdminOrderPage';
 import AdminCouponsPage from '../pages/AdminCouponsPage';
+import InventoryManagementPage from '../pages/admin/InventoryManagementPage';
+import AdminStoresPage from '../pages/admin/AdminStoresPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
@@ -94,6 +96,22 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <AdminCouponsPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/inventory',
+    element: (
+      <AdminRoute>
+        <InventoryManagementPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/stores',
+    element: (
+      <AdminRoute>
+        <AdminStoresPage />
       </AdminRoute>
     ),
   },

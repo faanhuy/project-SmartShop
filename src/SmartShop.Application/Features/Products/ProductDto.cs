@@ -6,7 +6,6 @@ public record ProductDto(
     string Description,
     decimal Price,
     decimal OriginalPrice,
-    int Stock,
     string Slug,
     string? ImageUrl,
     bool IsActive,

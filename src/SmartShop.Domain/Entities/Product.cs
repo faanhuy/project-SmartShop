@@ -8,7 +8,6 @@ public class Product : BaseAuditableEntity
     public string Description { get; private set; } = string.Empty;
     public decimal Price { get; private set; }
     public decimal OriginalPrice { get; private set; }
-    public int Stock { get; private set; }
     public string Slug { get; private set; } = string.Empty;
     public string? ImageUrl { get; private set; }
     public bool IsActive { get; private set; } = true;
@@ -20,7 +19,7 @@ public class Product : BaseAuditableEntity
     public IReadOnlyCollection<Review> Reviews => _reviews.AsReadOnly();
 
     public static Product Create(string name, string description,
-        decimal price, int stock, Guid categoryId, string slug,
+        decimal price, Guid categoryId, string slug,
         string? imageUrl = null, decimal? originalPrice = null)
     {
         return new Product
@@ -29,7 +28,6 @@ public class Product : BaseAuditableEntity
             Description = description,
             Price = price,
             OriginalPrice = originalPrice ?? price,
-            Stock = stock,
             CategoryId = categoryId,
             Slug = slug,
             ImageUrl = imageUrl
@@ -44,13 +42,6 @@ public class Product : BaseAuditableEntity
         Price = price;
         OriginalPrice = originalPrice ?? OriginalPrice;
         ImageUrl = imageUrl;
-    }
-
-    public void ReduceStock(int quantity)
-    {
-        if (quantity > Stock)
-            throw new InvalidOperationException("Không đủ tồn kho.");
-        Stock -= quantity;
     }
 
     public void Activate()

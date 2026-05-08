@@ -9,6 +9,7 @@ import {
   FiTrendingDown,
   FiUsers,
   FiDollarSign,
+  FiAlertTriangle,
 } from 'react-icons/fi';
 import {
   LineChart,
@@ -28,6 +29,7 @@ import {
 import AdminLayout from '../components/AdminLayout';
 import { productService } from '../services/productService';
 import { orderService } from '../services/orderService';
+import { storeService } from '../services/storeService';
 import { resolveOrderStatus } from '../types/order';
 import {
   analyticsService,
@@ -181,6 +183,7 @@ function RevenueTooltip({
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [period, setPeriod] = useState<PeriodDays>(30);
+  const [lowStockCount, setLowStockCount] = useState<number | null>(null);
 
   const [summary, setSummary] = useState<RevenueSummaryDto | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueByDateDto[]>([]);
@@ -204,6 +207,18 @@ export default function AdminDashboardPage() {
           totalOrders: orders.totalCount,
           pendingOrders: pending,
         });
+      })
+      .catch(() => {});
+
+    // Load low stock count from the first store
+    storeService
+      .getStores()
+      .then((stores) => {
+        if (stores.length === 0) return;
+        return storeService.getLowStockProducts(stores[0].id);
+      })
+      .then((items) => {
+        if (items) setLowStockCount(items.length);
       })
       .catch(() => {});
   }, []);
@@ -272,7 +287,7 @@ export default function AdminDashboardPage() {
     <AdminLayout title="Tổng quan">
 
       {/* ── Static stat cards ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         {statCards.map((card) => (
           <Link
             key={card.label}
@@ -290,6 +305,22 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
         ))}
+
+        {/* Low Stock Alert widget */}
+        <Link
+          to="/admin/inventory"
+          className="bg-white rounded-xl border shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+        >
+          <div className={`p-3 rounded-xl border ${lowStockCount && lowStockCount > 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
+            <FiAlertTriangle size={22} />
+          </div>
+          <div>
+            <p className={`text-2xl font-bold ${lowStockCount && lowStockCount > 0 ? 'text-red-600' : 'text-gray-800'}`}>
+              {lowStockCount != null ? lowStockCount : '—'}
+            </p>
+            <p className="text-sm text-gray-500">Sắp hết hàng</p>
+          </div>
+        </Link>
       </div>
 
       {/* ── Period selector ────────────────────────────────────────────────── */}
@@ -494,6 +525,22 @@ export default function AdminDashboardPage() {
           </div>
           <p className="text-sm text-gray-500">
             Theo dõi đơn, cập nhật trạng thái bếp và giao hàng theo từng bước.
+          </p>
+        </Link>
+
+        <Link
+          to="/admin/stores"
+          className="group bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-gray-800">Quản lý chi nhánh</h3>
+            <FiArrowRight
+              size={16}
+              className="text-gray-400 group-hover:text-rose-600 transition-colors"
+            />
+          </div>
+          <p className="text-sm text-gray-500">
+            Thêm, chỉnh sửa thông tin và trạng thái hoạt động của các chi nhánh.
           </p>
         </Link>
       </div>

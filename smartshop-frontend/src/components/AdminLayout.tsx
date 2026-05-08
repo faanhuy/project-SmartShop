@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu, FiExternalLink } from 'react-icons/fi';
+import { FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu, FiExternalLink, FiMapPin, FiArchive } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 
 interface AdminLayoutProps {
@@ -9,10 +9,12 @@ interface AdminLayoutProps {
 }
 
 const NAV_ITEMS = [
-  { to: '/admin',          label: 'Tổng quan',  icon: FiGrid,        end: true  },
-  { to: '/admin/products', label: 'Món ăn',     icon: FiPackage,     end: false },
-  { to: '/admin/orders',   label: 'Đơn giao',   icon: FiShoppingBag, end: false },
-  { to: '/admin/coupons',  label: 'Mã giảm giá', icon: FiTag,        end: false },
+  { to: '/admin',           label: 'Tổng quan',      icon: FiGrid,        end: true  },
+  { to: '/admin/products',  label: 'Món ăn',         icon: FiPackage,     end: false },
+  { to: '/admin/orders',    label: 'Đơn giao',       icon: FiShoppingBag, end: false },
+  { to: '/admin/coupons',   label: 'Mã giảm giá',    icon: FiTag,         end: false },
+  { to: '/admin/stores',    label: 'Chi nhánh',      icon: FiMapPin,      end: false },
+  { to: '/admin/inventory', label: 'Quản lý tồn kho', icon: FiArchive,    end: false },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {

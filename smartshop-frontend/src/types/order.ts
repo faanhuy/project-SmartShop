@@ -31,6 +31,7 @@ export interface PlaceOrderRequest {
   notes?: string;
   couponCode?: string;
   paymentMethod?: PaymentMethod;
+  storeId?: string;
 }
 
 export interface AddressDto {

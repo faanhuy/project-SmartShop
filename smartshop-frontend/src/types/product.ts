@@ -4,7 +4,6 @@ export interface ProductDto {
   description: string;
   price: number;
   originalPrice: number;
-  stock: number;
   slug: string;
   imageUrl: string | null;
   isActive: boolean;
@@ -33,7 +32,6 @@ export interface CreateProductRequest {
   description: string;
   price: number;
   originalPrice?: number;
-  stock: number;
   categoryId: string;
   slug: string;
   imageUrl?: string | null;

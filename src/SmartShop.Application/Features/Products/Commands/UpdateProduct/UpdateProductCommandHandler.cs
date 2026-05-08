@@ -29,6 +29,6 @@ public class UpdateProductCommandHandler(
 
         return new ProductDto(
             product.Id, product.Name, product.Description, product.Price, product.OriginalPrice,
-            product.Stock, product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt);
+            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt);
     }
 }

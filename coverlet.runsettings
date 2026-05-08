@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Coverage baseline: 52% (Application+Domain only). Sprint 12 target: 60%. Threshold is enforced by CI bash check, not coverlet (collector mode does not fail the build on threshold). -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Threshold>52</Threshold>
+          <ThresholdType>line</ThresholdType>
+          <ThresholdStat>Total</ThresholdStat>
+          <Include>[SmartShop.Application]*,[SmartShop.Domain]*</Include>
+          <Exclude>[*.Tests]*</Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

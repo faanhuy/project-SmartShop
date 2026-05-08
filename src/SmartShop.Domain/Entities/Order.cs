@@ -19,7 +19,10 @@ public class Order : BaseAuditableEntity
     public DateTime? PaidAt { get; private set; }
     public string? VnpayTransactionId { get; private set; }
 
+    public Guid? StoreId { get; private set; }
+
     public User? User { get; private set; }
+    public Store? Store { get; private set; }
 
     private readonly List<OrderItem> _items = [];
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
@@ -34,6 +37,13 @@ public class Order : BaseAuditableEntity
             ShippingAddress = shippingAddress,
             Notes = notes
         };
+    }
+
+    public void SetStoreId(Guid storeId)
+    {
+        if (storeId == Guid.Empty)
+            throw new ArgumentException("StoreId không được để trống.", nameof(storeId));
+        StoreId = storeId;
     }
 
     public void SetPaymentMethod(PaymentMethod method)

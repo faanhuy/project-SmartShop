@@ -5,6 +5,7 @@ namespace SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 
 public record PlaceOrderCommand(
     Guid UserId,
+    Guid StoreId,
     string ShippingAddress,
     string? Notes,
     string? CouponCode,

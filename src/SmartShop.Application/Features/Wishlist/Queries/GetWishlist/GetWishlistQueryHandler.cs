@@ -19,7 +19,7 @@ public class GetWishlistQueryHandler(
             ProductName: i.Product?.Name ?? string.Empty,
             Price: i.Product?.Price ?? 0,
             ImageUrl: i.Product?.ImageUrl,
-            IsInStock: (i.Product?.Stock ?? 0) > 0,
+            IsInStock: true,
             Slug: i.Product?.Slug ?? string.Empty
         )).ToList();
 

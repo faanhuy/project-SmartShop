@@ -31,6 +31,13 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // many:1 Order → Store (nullable — set null when store deleted)
+        builder.HasOne(e => e.Store)
+            .WithMany()
+            .HasForeignKey(e => e.StoreId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // 1:many Order → OrderItems
         // Order has private backing field _items — EF finds it by naming convention
         builder.HasMany(e => e.Items)

@@ -3,13 +3,17 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { productService } from '../services/productService';
 import { cartService } from '../services/cartService';
+import { storeService } from '../services/storeService';
 import { useAuthStore } from '../store/authStore';
+import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { ProductDto } from '../types/product';
-import { FiArrowLeft } from 'react-icons/fi';
+import type { StockInfo } from '../types/store';
+import { FiArrowLeft, FiMapPin } from 'react-icons/fi';
 import RecommendationCarousel from '../components/RecommendationCarousel';
 import ProductReviews from '../components/ProductReviews';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import StoreSelectorModal from '../components/StoreSelectorModal';
 import { getImageUrl } from '../utils/imageUrl';
 
 const formatPrice = (price: number) =>
@@ -19,12 +23,20 @@ export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, refreshCartCount } = useAuthStore();
+  const { selectedStore, fetchStores } = useStoreSelectionStore();
 
   const [product, setProduct] = useState<ProductDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+
+  // Stock info from selected store
+  const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
+  const [stockLoading, setStockLoading] = useState(false);
+
+  // Store selector modal
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -34,7 +46,23 @@ export default function ProductDetailPage() {
       .then(setProduct)
       .catch(() => setError('Không tìm thấy món ăn.'))
       .finally(() => setLoading(false));
-  }, [slug]);
+
+    fetchStores().catch(() => {});
+  }, [slug, fetchStores]);
+
+  // Fetch stock whenever product or selectedStore changes
+  useEffect(() => {
+    if (!product || !selectedStore) {
+      setStockInfo(null);
+      return;
+    }
+    setStockLoading(true);
+    storeService
+      .getProductStock(selectedStore.id, product.id)
+      .then(setStockInfo)
+      .catch(() => setStockInfo(null))
+      .finally(() => setStockLoading(false));
+  }, [product, selectedStore]);
 
   if (loading) {
     return (
@@ -91,6 +119,10 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <StoreSelectorModal
+        isOpen={storeModalOpen}
+        onClose={() => setStoreModalOpen(false)}
+      />
       <Navbar>
         <Link to="/products" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-rose-600">
           <FiArrowLeft size={16} />
@@ -127,17 +159,31 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            <p className="mt-1 text-sm text-gray-500">
-              {product.stock > 0 ? (
-                product.stock < 10 ? (
-                  <span className="text-orange-500">Còn {product.stock} phần trong bếp</span>
+            {/* Stock info by selected store */}
+            <div className="mt-1 text-sm">
+              {!selectedStore ? (
+                <button
+                  type="button"
+                  onClick={() => setStoreModalOpen(true)}
+                  className="text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                >
+                  <FiMapPin size={13} />
+                  Chọn chi nhánh để xem tồn kho
+                </button>
+              ) : stockLoading ? (
+                <span className="text-gray-400">Đang kiểm tra tồn kho...</span>
+              ) : stockInfo ? (
+                stockInfo.quantity === 0 ? (
+                  <span className="text-red-500 font-medium">Hết hàng tại chi nhánh này</span>
                 ) : (
-                  <span className="text-green-600">Sẵn sàng phục vụ ({product.stock} phần)</span>
+                  <span className="text-green-600">
+                    Còn hàng tại {selectedStore.name} ({stockInfo.quantity} phần)
+                  </span>
                 )
               ) : (
-                <span className="text-red-500">Tạm hết món</span>
+                <span className="text-gray-400">Không có thông tin tồn kho</span>
               )}
-            </p>
+            </div>
 
             <p className="mt-4 text-sm text-gray-600 leading-relaxed">{product.description}</p>
 
@@ -147,8 +193,15 @@ export default function ProductDetailPage() {
               <span className="rounded-full bg-rose-100 px-3 py-1 font-medium text-rose-700">Ăn nóng ngon hơn</span>
             </div>
 
+            {/* Low stock badge */}
+            {stockInfo && stockInfo.quantity > 0 && stockInfo.quantity <= 5 && (
+              <span className="inline-block mt-2 bg-orange-100 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
+                Còn ít hàng
+              </span>
+            )}
+
             {/* Quantity + Add to Cart */}
-            {product.stock > 0 ? (
+            {stockInfo === null || stockInfo.quantity > 0 ? (
               <div className="mt-6 space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-400">Số phần</p>
                 <div className="flex items-center gap-3">
@@ -161,7 +214,7 @@ export default function ProductDetailPage() {
                     </button>
                     <span className="px-4 py-2 font-medium text-sm">{quantity}</span>
                     <button
-                      onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                      onClick={() => setQuantity((q) => Math.min(stockInfo?.quantity ?? 99, q + 1))}
                       className="px-3 py-2 hover:bg-gray-100 text-gray-600 text-lg"
                     >
                       +
@@ -169,22 +222,30 @@ export default function ProductDetailPage() {
                   </div>
                   <button
                     onClick={handleAddToCart}
-                    disabled={addingToCart}
+                    disabled={addingToCart || (stockInfo !== null && stockInfo.quantity === 0)}
                     className="flex-1 border border-rose-600 text-rose-600 rounded-lg py-2 text-sm font-medium hover:bg-rose-50 transition-colors disabled:opacity-50"
                   >
                     {addingToCart ? 'Đang thêm...' : 'Thêm món'}
                   </button>
                   <button
                     onClick={handleBuyNow}
-                    disabled={addingToCart}
+                    disabled={addingToCart || (stockInfo !== null && stockInfo.quantity === 0)}
                     className="flex-1 bg-rose-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
                   >
                     Đặt ngay
                   </button>
                 </div>
-
               </div>
-            ) : null}
+            ) : (
+              <div className="mt-6">
+                <button
+                  disabled
+                  className="w-full bg-gray-100 text-gray-400 rounded-lg py-2.5 text-sm font-medium cursor-not-allowed"
+                >
+                  Hết hàng tại chi nhánh này
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

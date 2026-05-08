@@ -40,6 +40,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<UserAddress> UserAddresses { get; set; }
+    public DbSet<Store> Stores { get; set; }
+    public DbSet<StoreInventory> StoreInventories { get; set; }
 
     private static readonly TimeZoneInfo _vnTz =
         TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");

@@ -7,11 +7,13 @@ import { addressService } from '../services/addressService';
 import { paymentService } from '../services/paymentService';
 import type { CartDto } from '../types/cart';
 import type { AddressDto, PaymentMethod } from '../types/order';
-import { FiArrowLeft, FiShoppingBag, FiMapPin } from 'react-icons/fi';
+import { FiArrowLeft, FiShoppingBag, FiMapPin, FiRepeat } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { couponSession } from '../utils/couponSession';
 import { getImageUrl } from '../utils/imageUrl';
+import StoreSelectorModal from '../components/StoreSelectorModal';
+import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -31,6 +33,10 @@ export default function CheckoutPage() {
 
   // Payment method
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
+
+  // Store selection
+  const { selectedStore, fetchStores } = useStoreSelectionStore();
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -52,7 +58,16 @@ export default function CheckoutPage() {
       })
       .catch(() => {})
       .finally(() => setAddrLoading(false));
-  }, []);
+
+    fetchStores().catch(() => {});
+  }, [fetchStores]);
+
+  // Auto-open store modal if no store selected
+  useEffect(() => {
+    if (!selectedStore) {
+      setStoreModalOpen(true);
+    }
+  }, [selectedStore]);
 
   const resolveShippingAddress = (): string => {
     if (addresses.length > 0 && selectedAddressId) {
@@ -68,6 +83,11 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedStore) {
+      toast.error('Vui lòng chọn chi nhánh trước khi đặt hàng.');
+      setStoreModalOpen(true);
+      return;
+    }
     const resolved = resolveShippingAddress();
     if (!resolved) {
       setError('Vui lòng nhập địa chỉ giao món.');
@@ -82,6 +102,7 @@ export default function CheckoutPage() {
         notes: notes.trim() || undefined,
         couponCode: couponCode ?? '',
         paymentMethod,
+        storeId: selectedStore.id,
       });
       couponSession.clear();
 
@@ -115,9 +136,51 @@ export default function CheckoutPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Xác nhận đơn giao</h1>
 
+        <StoreSelectorModal
+          isOpen={storeModalOpen}
+          onClose={() => setStoreModalOpen(false)}
+          required={!selectedStore}
+        />
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left — Form */}
           <div className="flex-1 space-y-4">
+            {/* Store selector section */}
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-base font-semibold text-gray-800">Chi nhánh lấy hàng</h2>
+                <button
+                  type="button"
+                  onClick={() => setStoreModalOpen(true)}
+                  className="text-xs text-rose-600 hover:text-rose-700 flex items-center gap-1"
+                >
+                  <FiRepeat size={12} />
+                  Đổi chi nhánh
+                </button>
+              </div>
+              {selectedStore ? (
+                <div className="flex items-start gap-2 text-sm text-gray-700">
+                  <FiMapPin size={14} className="shrink-0 mt-0.5 text-rose-500" />
+                  <div>
+                    <p className="font-medium">{selectedStore.name}</p>
+                    <p className="text-xs text-gray-500">{selectedStore.address}</p>
+                    <p className="text-xs text-gray-500">{selectedStore.phone}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-amber-600">
+                  Chưa chọn chi nhánh.{' '}
+                  <button
+                    type="button"
+                    onClick={() => setStoreModalOpen(true)}
+                    className="underline hover:text-amber-700"
+                  >
+                    Chọn ngay
+                  </button>
+                </p>
+              )}
+            </div>
+
             {/* Address section */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">

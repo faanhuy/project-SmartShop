@@ -35,9 +35,26 @@ jobs:
         run: |
           dotnet test tests/SmartShop.Application.Tests/SmartShop.Application.Tests.csproj \
             --no-build -c Release \
+            --settings coverlet.runsettings \
             --collect:"XPlat Code Coverage" \
             --results-directory ./coverage \
             --logger "trx;LogFileName=test-results.trx"
+
+      - name: Enforce coverage threshold
+        run: |
+          THRESHOLD=52
+          REPORT=$(find ./coverage -name "coverage.cobertura.xml" | head -1)
+          if [ -z "$REPORT" ]; then echo "No coverage report found"; exit 1; fi
+          LINE_RATE=$(grep -oP 'line-rate="\K[^"]+' "$REPORT" | head -1)
+          PCT=$(echo "$LINE_RATE * 100" | bc -l | xargs printf "%.1f")
+          INT_PCT=$(echo "$LINE_RATE * 100" | bc -l | xargs printf "%.0f")
+          echo "Line coverage: ${PCT}% (threshold: ${THRESHOLD}%, sprint target: 60%)"
+          echo "### Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "**Line coverage: ${PCT}%** (threshold: ${THRESHOLD}%, sprint target: 60%)" >> $GITHUB_STEP_SUMMARY
+          if [ "$INT_PCT" -lt "$THRESHOLD" ]; then
+            echo "FAIL: coverage ${PCT}% is below threshold ${THRESHOLD}%"
+            exit 1
+          fi
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4

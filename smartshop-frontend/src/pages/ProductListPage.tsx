@@ -238,20 +238,13 @@ export default function ProductListPage() {
                         <p className="text-gray-400 text-xs line-through">{formatPrice(product.originalPrice)}</p>
                       )}
                     </div>
-                    {product.stock < 5 && product.stock > 0 && (
-                      <p className="text-orange-500 text-xs mt-1">Còn nhận {product.stock} phần</p>
-                    )}
-                    {product.stock === 0 ? (
-                      <p className="mt-2 text-xs text-center text-gray-400 py-1">Tạm hết món</p>
-                    ) : (
-                      <button
-                        onClick={(e) => handleQuickAdd(e, product)}
-                        disabled={addingId === product.id}
-                        className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
-                      >
-                        {addingId === product.id ? 'Đang thêm...' : '+ Thêm món'}
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => handleQuickAdd(e, product)}
+                      disabled={addingId === product.id}
+                      className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
+                    >
+                      {addingId === product.id ? 'Đang thêm...' : '+ Thêm món'}
+                    </button>
                   </Link>
                 ))}
               </div>

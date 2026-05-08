@@ -55,7 +55,7 @@ public class GetRecommendationsQueryHandler(
                 {
                     var p = productById[r.Id];
                     return new ProductDto(p.Id, p.Name, p.Description, p.Price,
-                        p.OriginalPrice, p.Stock, p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt);
+                        p.OriginalPrice, p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt);
                 })
                 .ToList();
 
@@ -77,7 +77,7 @@ public class GetRecommendationsQueryHandler(
                 .Where(p => p.IsActive && p.Id != request.ProductId)
                 .Take(request.Count)
                 .Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Price,
-                    p.OriginalPrice, p.Stock, p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt))
+                    p.OriginalPrice, p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt))
                 .ToList();
 
             // Cache ngắn hơn để sớm thử lại AI

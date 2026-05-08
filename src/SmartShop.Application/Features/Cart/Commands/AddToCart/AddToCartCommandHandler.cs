@@ -19,9 +19,6 @@ public class AddToCartCommandHandler(
         if (!product.IsActive)
             throw new NotFoundException("Product", request.ProductId);
 
-        if (request.Quantity > product.Stock)
-            throw new ConflictException($"Chỉ còn {product.Stock} sản phẩm trong kho.");
-
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
 
         if (cart == null)
