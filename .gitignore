@@ -369,6 +369,7 @@ CLAUDE.local.md
 .env
 .env.*
 !.env.example
+appsettings.Development.json
 appsettings.Production.json
 appsettings.Staging.json
 
