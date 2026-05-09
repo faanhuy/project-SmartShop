@@ -12,9 +12,8 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
         RuleFor(x => x.StoreId)
             .NotEmpty().WithMessage("Vui lòng chọn chi nhánh.");
 
-        RuleFor(x => x.ShippingAddress)
-            .NotEmpty().WithMessage("Địa chỉ giao hàng không được để trống.")
-            .MaximumLength(500).WithMessage("Địa chỉ giao hàng tối đa 500 ký tự.");
+        RuleFor(x => x.AddressId)
+            .NotEmpty().WithMessage("Vui lòng chọn địa chỉ giao hàng.");
 
         RuleFor(x => x.Notes)
             .MaximumLength(500).WithMessage("Ghi chú tối đa 500 ký tự.")

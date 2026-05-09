@@ -36,7 +36,7 @@ public class RemoveFromCartCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        var product = Product.Create("P", "D", 10m, 5, Guid.NewGuid(), "p-slug");
+        var product = Product.Create("P", "D", 10m, Guid.NewGuid(), "p-slug");
         cart.AddItem(productId, 1, product.Price);
 
         var callCount = 0;
@@ -55,7 +55,7 @@ public class RemoveFromCartCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        var product = Product.Create("P", "D", 10m, 5, Guid.NewGuid(), "p-slug");
+        var product = Product.Create("P", "D", 10m, Guid.NewGuid(), "p-slug");
         cart.AddItem(productId, 1, product.Price);
 
         var callCount = 0;

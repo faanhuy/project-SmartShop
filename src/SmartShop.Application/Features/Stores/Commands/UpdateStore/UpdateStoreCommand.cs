@@ -9,4 +9,7 @@ public record UpdateStoreCommand(
     string Name,
     string Address,
     string Phone,
-    bool IsActive) : IRequest<ApiResponse<StoreDto>>;
+    bool IsActive,
+    int? ProvinceId = null,
+    int? WardId = null,
+    string? Street = null) : IRequest<ApiResponse<StoreDto>>;

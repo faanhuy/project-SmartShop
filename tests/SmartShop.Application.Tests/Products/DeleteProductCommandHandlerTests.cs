@@ -23,7 +23,7 @@ public class DeleteProductCommandHandlerTests
     public async Task Handle_ExistingProduct_DeactivatesProduct()
     {
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 5, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
@@ -52,7 +52,7 @@ public class DeleteProductCommandHandlerTests
     public async Task Handle_ExistingProduct_RemovesFromCache()
     {
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 5, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
@@ -65,7 +65,7 @@ public class DeleteProductCommandHandlerTests
     public async Task Handle_ExistingProduct_InvalidatesListCache()
     {
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 5, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
@@ -78,7 +78,7 @@ public class DeleteProductCommandHandlerTests
     public async Task Handle_ExistingProduct_CallsRepositoryUpdate()
     {
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 5, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 

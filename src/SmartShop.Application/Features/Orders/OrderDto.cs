@@ -20,6 +20,12 @@ public class OrderDto
     public decimal DiscountAmount { get; init; }
     public decimal OriginalAmount { get; init; }
     public string ShippingAddress { get; init; } = string.Empty;
+    public Guid? ShippingAddressId { get; init; }
+    public string? ShippingStreet { get; init; }
+    public int? ShippingWardId { get; init; }
+    public int? ShippingProvinceId { get; init; }
+    public string? ShippingWardName { get; init; }
+    public string? ShippingProvinceName { get; init; }
     public string? Notes { get; init; }
     public string? CouponCode { get; init; }
     public string PaymentMethod { get; init; } = string.Empty;

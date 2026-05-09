@@ -18,7 +18,8 @@ public class UpdateStoreCommandHandler(
         var store = await storeRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Store), request.Id);
 
-        store.Update(request.Name, request.Address, request.Phone);
+        store.Update(request.Name, request.Address, request.Phone,
+            request.ProvinceId, request.WardId, request.Street);
 
         if (request.IsActive)
             store.Activate();
@@ -28,6 +29,8 @@ public class UpdateStoreCommandHandler(
         storeRepository.Update(store);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<StoreDto>.Ok(new StoreDto(store.Id, store.Name, store.Address, store.Phone));
+        return ApiResponse<StoreDto>.Ok(new StoreDto(
+            store.Id, store.Name, store.Address, store.Phone,
+            store.Street, store.ProvinceId, store.WardId));
     }
 }

@@ -24,7 +24,7 @@ public class AddToCartCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 10, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
 
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
 
@@ -45,7 +45,7 @@ public class AddToCartCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 10, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         var existingCart = CartEntity.Create(userId);
 
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
@@ -65,7 +65,7 @@ public class AddToCartCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         // Create product first so we can use its actual Id (handler uses product.Id, not request.ProductId)
-        var product = Product.Create("Product", "Desc", 50m, 10, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         var productId = product.Id;
         var existingCart = CartEntity.Create(userId);
         existingCart.AddItem(product.Id, 1, 50m); // already has this product
@@ -99,7 +99,7 @@ public class AddToCartCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 10, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         product.Deactivate();
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
 
@@ -113,11 +113,12 @@ public class AddToCartCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 3, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
+        product.Deactivate();
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
 
         var act = () => CreateHandler().Handle(new AddToCartCommand(userId, productId, 10), default);
 
-        await act.Should().ThrowAsync<ConflictException>();
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 }

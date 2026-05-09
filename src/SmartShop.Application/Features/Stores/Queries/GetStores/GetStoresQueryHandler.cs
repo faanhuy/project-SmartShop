@@ -11,7 +11,10 @@ public class GetStoresQueryHandler(IStoreRepository storeRepository)
     {
         var stores = await storeRepository.GetAllActiveAsync(cancellationToken);
 
-        var dtos = stores.Select(s => new StoreDto(s.Id, s.Name, s.Address, s.Phone)).ToList();
+        var dtos = stores.Select(s => new StoreDto(
+            s.Id, s.Name, s.Address, s.Phone,
+            s.Street, s.ProvinceId, s.WardId,
+            s.Province?.Name, s.Ward?.Name)).ToList();
 
         return ApiResponse<List<StoreDto>>.Ok(dtos);
     }

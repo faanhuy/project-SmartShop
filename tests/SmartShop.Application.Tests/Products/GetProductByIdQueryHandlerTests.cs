@@ -19,7 +19,7 @@ public class GetProductByIdQueryHandlerTests
         new(_productRepo.Object, _cache.Object);
 
     private static ProductDto MakeDto(Guid id) =>
-        new(id, "Cached Product", "Desc", 50m, 50m, 5, "cached-slug", null, true, Guid.NewGuid(), DateTime.UtcNow);
+        new(id, "Cached Product", "Desc", 50m, 50m, "cached-slug", null, true, Guid.NewGuid(), DateTime.UtcNow);
 
     [Fact]
     public async Task Handle_CacheHit_ReturnsCachedDtoWithoutRepoCall()
@@ -39,7 +39,7 @@ public class GetProductByIdQueryHandlerTests
     public async Task Handle_CacheMiss_ProductFound_ReturnsDto()
     {
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 5, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         _cache.Setup(c => c.GetAsync<ProductDto>($"products:id:{productId}", default))
               .ReturnsAsync((ProductDto?)null);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
@@ -66,7 +66,7 @@ public class GetProductByIdQueryHandlerTests
     public async Task Handle_CacheMiss_ProductFound_SetsCacheWithTenMinuteExpiry()
     {
         var productId = Guid.NewGuid();
-        var product = Product.Create("Product", "Desc", 50m, 5, Guid.NewGuid(), "product-slug");
+        var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         _cache.Setup(c => c.GetAsync<ProductDto>($"products:id:{productId}", default))
               .ReturnsAsync((ProductDto?)null);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);

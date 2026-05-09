@@ -47,5 +47,21 @@ public class UserAddressConfiguration : IEntityTypeConfiguration<UserAddress>
 
         builder.HasIndex(a => a.UserId)
             .HasDatabaseName("IX_UserAddresses_UserId");
+
+        // Structured geography FKs (Sprint 18B)
+        builder.Property(a => a.ProvinceId).IsRequired(false);
+        builder.Property(a => a.WardId).IsRequired(false);
+
+        builder.HasOne(a => a.Province)
+            .WithMany()
+            .HasForeignKey(a => a.ProvinceId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(a => a.WardEntity)
+            .WithMany()
+            .HasForeignKey(a => a.WardId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

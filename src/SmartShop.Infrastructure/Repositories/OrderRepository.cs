@@ -18,6 +18,8 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
         return await context.Orders
             .Include(o => o.Items)
             .ThenInclude(i => i.Product)
+            .Include(o => o.ShippingWard)
+            .Include(o => o.ShippingProvince)
             .FirstOrDefaultAsync(o => o.Id == id, ct);
     }
 
@@ -28,6 +30,8 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
             .AsNoTracking()
             .Include(o => o.Items)
             .ThenInclude(i => i.Product)
+            .Include(o => o.ShippingWard)
+            .Include(o => o.ShippingProvince)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt);
 
@@ -48,6 +52,8 @@ public class OrderRepository(ApplicationDbContext context) : IOrderRepository
             .Include(o => o.User)
             .Include(o => o.Items)
             .ThenInclude(i => i.Product)
+            .Include(o => o.ShippingWard)
+            .Include(o => o.ShippingProvince)
             .AsQueryable();
 
         if (statusFilter.HasValue)

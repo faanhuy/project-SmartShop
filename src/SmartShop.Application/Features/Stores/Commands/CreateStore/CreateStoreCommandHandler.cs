@@ -14,11 +14,14 @@ public class CreateStoreCommandHandler(
 {
     public async Task<ApiResponse<StoreDto>> Handle(CreateStoreCommand request, CancellationToken cancellationToken)
     {
-        var store = Store.Create(request.Name, request.Address, request.Phone);
+        var store = Store.Create(request.Name, request.Address, request.Phone,
+            request.ProvinceId, request.WardId, request.Street);
 
         await storeRepository.AddAsync(store, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<StoreDto>.Ok(new StoreDto(store.Id, store.Name, store.Address, store.Phone));
+        return ApiResponse<StoreDto>.Ok(new StoreDto(
+            store.Id, store.Name, store.Address, store.Phone,
+            store.Street, store.ProvinceId, store.WardId));
     }
 }

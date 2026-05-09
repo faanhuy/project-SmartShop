@@ -69,18 +69,6 @@ export default function CheckoutPage() {
     }
   }, [selectedStore]);
 
-  const resolveShippingAddress = (): string => {
-    if (addresses.length > 0 && selectedAddressId) {
-      const addr = addresses.find((a) => a.id === selectedAddressId);
-      if (addr) {
-        return [addr.recipientName, addr.phone, addr.street, addr.ward, addr.district, addr.city]
-          .filter(Boolean)
-          .join(', ');
-      }
-    }
-    return shippingAddress.trim();
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStore) {
@@ -88,9 +76,8 @@ export default function CheckoutPage() {
       setStoreModalOpen(true);
       return;
     }
-    const resolved = resolveShippingAddress();
-    if (!resolved) {
-      setError('Vui lòng nhập địa chỉ giao món.');
+    if (!selectedAddressId) {
+      setError('Vui lòng chọn địa chỉ giao hàng.');
       return;
     }
     setLoading(true);
@@ -98,7 +85,7 @@ export default function CheckoutPage() {
 
     try {
       const order = await orderService.placeOrder({
-        shippingAddress: resolved,
+        addressId: selectedAddressId,
         notes: notes.trim() || undefined,
         couponCode: couponCode ?? '',
         paymentMethod,
@@ -238,7 +225,9 @@ export default function CheckoutPage() {
                           )}
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5">
-                          {[addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
+                          {addr.street && addr.wardName && addr.provinceName
+                            ? `${addr.street}, ${addr.wardName}, ${addr.provinceName}`
+                            : [addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
                         </p>
                       </div>
                     </label>

@@ -97,7 +97,12 @@ export default function OrderDetailPage() {
 
         <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-1 text-sm text-gray-600">
           <p><span className="font-medium text-gray-800">Ngày đặt:</span> {formatDateTime(order.createdAt)}</p>
-          <p><span className="font-medium text-gray-800">Địa chỉ giao:</span> {order.shippingAddress}</p>
+          <p>
+            <span className="font-medium text-gray-800">Địa chỉ giao:</span>{' '}
+            {order.shippingWardName
+              ? `${order.shippingWardName}, ${order.shippingProvinceName ?? ''}`.replace(/,\s*$/, '')
+              : order.shippingAddress}
+          </p>
           {order.notes && <p><span className="font-medium text-gray-800">Ghi chú:</span> {order.notes}</p>}
         </div>
 

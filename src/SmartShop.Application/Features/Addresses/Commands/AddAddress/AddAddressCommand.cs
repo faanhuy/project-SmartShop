@@ -11,7 +11,9 @@ public record AddAddressRequest(
     string Street,
     string? Ward,
     string District,
-    string City);
+    string City,
+    int? ProvinceId = null,
+    int? WardId = null);
 
 public record AddAddressCommand(
     string UserId,
@@ -21,4 +23,6 @@ public record AddAddressCommand(
     string Street,
     string? Ward,
     string District,
-    string City) : IRequest<ApiResponse<AddressDto>>;
+    string City,
+    int? ProvinceId = null,
+    int? WardId = null) : IRequest<ApiResponse<AddressDto>>;

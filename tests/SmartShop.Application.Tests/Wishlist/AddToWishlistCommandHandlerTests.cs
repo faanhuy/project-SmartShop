@@ -29,7 +29,7 @@ public class AddToWishlistCommandHandlerTests
         new(_wishlistRepo.Object, _productRepo.Object, _uow.Object, _currentUser.Object);
 
     private static Product CreateProduct() =>
-        Product.Create("San pham A", "Mo ta", 100m, 10, Guid.NewGuid(), "san-pham-a");
+        Product.Create("San pham A", "Mo ta", 100m, Guid.NewGuid(), "san-pham-a");
 
     [Fact]
     public async Task Handle_ValidCommand_ReturnsSuccess()

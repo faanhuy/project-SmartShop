@@ -451,6 +451,18 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<Guid?>("ShippingAddressId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ShippingProvinceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ShippingStreet")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ShippingWardId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -474,6 +486,10 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ShippingProvinceId");
+
+                    b.HasIndex("ShippingWardId");
 
                     b.HasIndex("StoreId");
 
@@ -602,6 +618,26 @@ namespace SmartShop.Infrastructure.Migrations
                     b.ToTable("ProductEmbeddings");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.Province", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Provinces");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Review", b =>
                 {
                     b.Property<Guid>("Id")
@@ -680,13 +716,27 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("ProvinceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Street")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("WardId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ProvinceId");
+
+                    b.HasIndex("WardId");
 
                     b.ToTable("Stores", (string)null);
                 });
@@ -836,6 +886,9 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("ProvinceId")
+                        .HasColumnType("int");
+
                     b.Property<string>("RecipientName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -861,12 +914,44 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("WardId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ProvinceId");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_UserAddresses_UserId");
 
+                    b.HasIndex("WardId");
+
                     b.ToTable("UserAddresses");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.Ward", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ProvinceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProvinceId");
+
+                    b.ToTable("Wards");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.WishlistItem", b =>
@@ -973,6 +1058,14 @@ namespace SmartShop.Infrastructure.Migrations
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Order", b =>
                 {
+                    b.HasOne("SmartShop.Domain.Entities.Province", "ShippingProvince")
+                        .WithMany()
+                        .HasForeignKey("ShippingProvinceId");
+
+                    b.HasOne("SmartShop.Domain.Entities.Ward", "ShippingWard")
+                        .WithMany()
+                        .HasForeignKey("ShippingWardId");
+
                     b.HasOne("SmartShop.Domain.Entities.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId")
@@ -983,6 +1076,10 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ShippingProvince");
+
+                    b.Navigation("ShippingWard");
 
                     b.Navigation("Store");
 
@@ -1049,6 +1146,23 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.Store", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Province", "Province")
+                        .WithMany()
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SmartShop.Domain.Entities.Ward", "Ward")
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Province");
+
+                    b.Navigation("Ward");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.StoreInventory", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.Product", "Product")
@@ -1066,6 +1180,34 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.UserAddress", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Province", "Province")
+                        .WithMany()
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SmartShop.Domain.Entities.Ward", "WardEntity")
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Province");
+
+                    b.Navigation("WardEntity");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.Ward", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Province", "Province")
+                        .WithMany("Wards")
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Province");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.WishlistItem", b =>
@@ -1107,6 +1249,11 @@ namespace SmartShop.Infrastructure.Migrations
             modelBuilder.Entity("SmartShop.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.Province", b =>
+                {
+                    b.Navigation("Wards");
                 });
 #pragma warning restore 612, 618
         }

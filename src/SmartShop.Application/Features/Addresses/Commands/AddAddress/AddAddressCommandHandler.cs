@@ -20,7 +20,9 @@ public class AddAddressCommandHandler(
             command.Street,
             command.Ward,
             command.District,
-            command.City);
+            command.City,
+            command.ProvinceId,
+            command.WardId);
 
         // If user has no addresses yet, make this one the default
         var existing = await addressRepository.GetByUserIdAsync(command.UserId, cancellationToken);

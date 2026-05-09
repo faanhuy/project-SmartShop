@@ -6,7 +6,7 @@ namespace SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 public record PlaceOrderCommand(
     Guid UserId,
     Guid StoreId,
-    string ShippingAddress,
+    Guid AddressId,
     string? Notes,
     string? CouponCode,
     PaymentMethod PaymentMethod = PaymentMethod.COD) : IRequest<OrderDto>;

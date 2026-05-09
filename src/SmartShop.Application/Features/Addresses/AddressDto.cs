@@ -12,7 +12,11 @@ public record AddressDto(
     string District,
     string City,
     bool IsDefault,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    int? ProvinceId = null,
+    int? WardId = null,
+    string? ProvinceName = null,
+    string? WardName = null)
 {
     public static AddressDto From(UserAddress address) => new(
         address.Id,
@@ -24,5 +28,9 @@ public record AddressDto(
         address.District,
         address.City,
         address.IsDefault,
-        address.CreatedAt);
+        address.CreatedAt,
+        address.ProvinceId,
+        address.WardId,
+        address.Province?.Name,
+        address.WardEntity?.Name);
 }

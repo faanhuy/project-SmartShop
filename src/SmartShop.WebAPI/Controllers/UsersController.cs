@@ -66,7 +66,9 @@ public class UsersController(IMediator mediator) : ControllerBase
             request.Street,
             request.Ward,
             request.District,
-            request.City), ct);
+            request.City,
+            request.ProvinceId,
+            request.WardId), ct);
         return Ok(result);
     }
 
@@ -84,7 +86,9 @@ public class UsersController(IMediator mediator) : ControllerBase
             request.Street,
             request.Ward,
             request.District,
-            request.City), ct);
+            request.City,
+            request.ProvinceId,
+            request.WardId), ct);
         return Ok(result);
     }
 

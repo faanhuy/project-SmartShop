@@ -11,6 +11,8 @@ public class UserAddressRepository(ApplicationDbContext context) : IUserAddressR
     {
         return await context.UserAddresses
             //.AsNoTracking()
+            .Include(a => a.Province)
+            .Include(a => a.WardEntity)
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.IsDefault)
             .ThenBy(a => a.CreatedAt)
@@ -20,6 +22,8 @@ public class UserAddressRepository(ApplicationDbContext context) : IUserAddressR
     public async Task<UserAddress?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await context.UserAddresses
+            .Include(a => a.Province)
+            .Include(a => a.WardEntity)
             .FirstOrDefaultAsync(a => a.Id == id, ct);
     }
 

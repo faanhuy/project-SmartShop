@@ -29,7 +29,8 @@ public class OrdersController(IMediator mediator) : ControllerBase
         [FromBody] PlaceOrderRequest request, CancellationToken ct)
     {
         var result = await mediator.Send(
-            new PlaceOrderCommand(CurrentUserId, request.StoreId, request.ShippingAddress, request.Notes, request.CouponCode, request.PaymentMethod), ct);
+            new PlaceOrderCommand(CurrentUserId, request.StoreId, request.AddressId,
+                request.Notes, request.CouponCode, request.PaymentMethod), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<OrderDto>.Ok(result));
     }
 
@@ -86,5 +87,10 @@ public class OrdersController(IMediator mediator) : ControllerBase
     }
 }
 
-public record PlaceOrderRequest(Guid StoreId, string ShippingAddress, string? Notes, string? CouponCode, PaymentMethod PaymentMethod = PaymentMethod.COD);
+public record PlaceOrderRequest(
+    Guid StoreId,
+    Guid AddressId,
+    string? Notes,
+    string? CouponCode,
+    PaymentMethod PaymentMethod = PaymentMethod.COD);
 public record UpdateOrderStatusRequest(OrderStatus Status);

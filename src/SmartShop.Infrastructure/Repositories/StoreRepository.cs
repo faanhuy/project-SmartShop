@@ -10,6 +10,8 @@ public class StoreRepository(ApplicationDbContext context) : IStoreRepository
     public async Task<Store?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await context.Stores
+            .Include(s => s.Province)
+            .Include(s => s.Ward)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
     }
 
@@ -17,6 +19,8 @@ public class StoreRepository(ApplicationDbContext context) : IStoreRepository
     {
         return await context.Stores
             .AsNoTracking()
+            .Include(s => s.Province)
+            .Include(s => s.Ward)
             .Where(s => s.IsActive)
             .OrderBy(s => s.Name)
             .ToListAsync(ct);

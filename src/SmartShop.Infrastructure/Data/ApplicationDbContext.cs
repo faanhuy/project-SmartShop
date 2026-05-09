@@ -42,6 +42,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<Store> Stores { get; set; }
     public DbSet<StoreInventory> StoreInventories { get; set; }
+    public DbSet<Province> Provinces => Set<Province>();
+    public DbSet<Ward> Wards => Set<Ward>();
 
     private static readonly TimeZoneInfo _vnTz =
         TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");

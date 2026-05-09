@@ -16,7 +16,13 @@ export interface OrderDto {
   userName: string;
   status: string;
   totalAmount: number;
+  shippingAddressId?: string;
   shippingAddress: string;
+  shippingStreet?: string;
+  shippingWardId?: number;
+  shippingProvinceId?: number;
+  shippingWardName?: string;
+  shippingProvinceName?: string;
   notes: string | null;
   items: OrderItemDto[];
   createdAt: string;
@@ -27,7 +33,7 @@ export interface OrderDto {
 }
 
 export interface PlaceOrderRequest {
-  shippingAddress: string;
+  addressId: string;
   notes?: string;
   couponCode?: string;
   paymentMethod?: PaymentMethod;
@@ -45,6 +51,10 @@ export interface AddressDto {
   city: string;
   isDefault: boolean;
   createdAt: string;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
 }
 
 export const ORDER_STATUSES = [

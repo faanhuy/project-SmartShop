@@ -19,7 +19,7 @@ public class AddReviewCommandHandlerTests
         new(_reviewRepo.Object, _productRepo.Object, _uow.Object);
 
     private static Product CreateProduct() =>
-        Product.Create("Product", "Desc", 100m, 10, Guid.NewGuid(), "product-slug");
+        Product.Create("Product", "Desc", 100m, Guid.NewGuid(), "product-slug");
 
     [Fact]
     public async Task Handle_ProductNotFound_ThrowsNotFoundException()

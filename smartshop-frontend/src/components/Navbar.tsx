@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiPackage, FiLogOut, FiGrid, FiUser, FiHeart } from 'react-icons/fi';
+import {
+  FiShoppingCart, FiPackage, FiLogOut, FiGrid,
+  FiUser, FiHeart, FiMapPin, FiChevronDown, FiCheck,
+} from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
 import { wishlistService } from '../services/wishlistService';
+import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import NotificationBell from './NotificationBell';
 
 interface NavbarProps {
@@ -18,6 +22,39 @@ export default function Navbar({ children }: NavbarProps) {
   const [orderCount, setOrderCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
+  // Store selection
+  const { stores, selectedStore, setSelectedStore, fetchStores } = useStoreSelectionStore();
+  const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
+  const storeDropdownRef = useRef<HTMLDivElement>(null);
+
+  const activeStores = stores.filter((s) => s.isActive !== false);
+
+  useEffect(() => {
+    if (stores.length === 0) fetchStores().catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Đóng dropdown khi click ngoài
+  useEffect(() => {
+    if (!storeDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (storeDropdownRef.current && !storeDropdownRef.current.contains(e.target as Node)) {
+        setStoreDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [storeDropdownOpen]);
+
+  // Đóng dropdown khi nhấn Escape
+  useEffect(() => {
+    if (!storeDropdownOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setStoreDropdownOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [storeDropdownOpen]);
+
   useEffect(() => {
     if (!isAuthenticated) {
       setCartCount(0);
@@ -27,7 +64,7 @@ export default function Navbar({ children }: NavbarProps) {
     cartService.getCart()
       .then((cart) => setCartCount(cart.items.reduce((s, i) => s + i.quantity, 0)))
       .catch(() => setCartCount(0));
-  }, [isAuthenticated, cartVersion]); // re-fetch khi cartVersion thay đổi
+  }, [isAuthenticated, cartVersion]);
 
   useEffect(() => {
     if (!isAuthenticated) { setOrderCount(0); return; }
@@ -53,7 +90,6 @@ export default function Navbar({ children }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/products" className="shrink-0 flex items-center gap-2.5">
-          {/* H for Huy — two soft rounded legs, crossbar = mini burger */}
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="hLogoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
@@ -61,22 +97,12 @@ export default function Navbar({ children }: NavbarProps) {
                 <stop offset="100%" stopColor="#f97316" />
               </linearGradient>
             </defs>
-            {/* Background */}
             <rect width="40" height="40" rx="14" fill="url(#hLogoGrad)" />
-
-            {/* H — left leg */}
             <line x1="11" y1="9" x2="11" y2="31" stroke="white" strokeWidth="5" strokeLinecap="round" strokeOpacity="0.95" />
-            {/* H — right leg */}
             <line x1="29" y1="9" x2="29" y2="31" stroke="white" strokeWidth="5" strokeLinecap="round" strokeOpacity="0.95" />
-
-            {/* Crossbar = mini burger */}
-            {/* top bun — soft dome arc */}
             <path d="M13.5 20 Q20 13.5 26.5 20" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none" strokeOpacity="0.95" />
-            {/* lettuce — wavy green */}
             <path d="M13 21.5 Q16 20 19.5 21.5 Q23 20 26.5 21.5" stroke="#86efac" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.85" />
-            {/* patty */}
             <line x1="13" y1="23.5" x2="27" y2="23.5" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" />
-            {/* bottom bun */}
             <line x1="13.5" y1="26" x2="26.5" y2="26" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeOpacity="0.9" />
           </svg>
           <div className="flex flex-col">
@@ -84,6 +110,72 @@ export default function Navbar({ children }: NavbarProps) {
             <span className="hidden sm:block text-[10px] text-gray-400 leading-none">Đồ ăn nhanh — giao tận nơi</span>
           </div>
         </Link>
+
+        {/* Store picker */}
+        <div ref={storeDropdownRef} className="relative shrink-0">
+          <button
+            onClick={() => setStoreDropdownOpen((o) => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-colors ${
+              selectedStore
+                ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                : 'border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100'
+            }`}
+          >
+            <FiMapPin size={13} className={selectedStore ? 'text-rose-500' : 'text-gray-400'} />
+            <span className="max-w-[120px] truncate font-medium">
+              {selectedStore ? selectedStore.name : 'Chọn chi nhánh'}
+            </span>
+            <FiChevronDown
+              size={13}
+              className={`transition-transform ${storeDropdownOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {storeDropdownOpen && (
+            <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+              <p className="px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                Chọn chi nhánh
+              </p>
+              {activeStores.length === 0 ? (
+                <p className="px-3 py-3 text-sm text-gray-400 text-center">Không có chi nhánh nào.</p>
+              ) : (
+                activeStores.map((store) => {
+                  const isSelected = selectedStore?.id === store.id;
+                  return (
+                    <button
+                      key={store.id}
+                      onClick={() => {
+                        setSelectedStore(store);
+                        setStoreDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors ${
+                        isSelected ? 'bg-rose-50' : ''
+                      }`}
+                    >
+                      <FiMapPin
+                        size={14}
+                        className={`mt-0.5 shrink-0 ${isSelected ? 'text-rose-500' : 'text-gray-300'}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${isSelected ? 'text-rose-700' : 'text-gray-800'}`}>
+                          {store.name}
+                        </p>
+                        {(store.street || store.address) && (
+                          <p className="text-xs text-gray-400 truncate mt-0.5">
+                            {store.street
+                              ? `${store.street}, ${store.wardName ?? ''}, ${store.provinceName ?? ''}`
+                              : store.address}
+                          </p>
+                        )}
+                      </div>
+                      {isSelected && <FiCheck size={14} className="text-rose-500 shrink-0 mt-0.5" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Center slot (search bar, etc.) */}
         {children && <div className="flex-1 max-w-xl">{children}</div>}

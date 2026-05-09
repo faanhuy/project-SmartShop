@@ -22,7 +22,7 @@ public class CreateProductCommandHandlerTests
         new(_productRepo.Object, _categoryRepo.Object, _uow.Object, _cache.Object);
 
     private static CreateProductCommand ValidCommand(Guid categoryId) =>
-        new("Test Product", "Description", 99.99m, 10, categoryId, "test-product");
+        new("Test Product", "Description", 99.99m, categoryId, "test-product");
 
     [Fact]
     public async Task Handle_ValidRequest_ReturnsProductDto()
@@ -56,7 +56,7 @@ public class CreateProductCommandHandlerTests
     {
         var categoryId = Guid.NewGuid();
         var category = Category.Create("Electronics", "electronics");
-        var existingProduct = Product.Create("Existing", "Desc", 50m, 5, categoryId, "test-product");
+        var existingProduct = Product.Create("Existing", "Desc", 50m, categoryId, "test-product");
         _categoryRepo.Setup(r => r.GetByIdAsync(categoryId, default)).ReturnsAsync(category);
         _productRepo.Setup(r => r.GetBySlugAsync("test-product", default)).ReturnsAsync(existingProduct);
 

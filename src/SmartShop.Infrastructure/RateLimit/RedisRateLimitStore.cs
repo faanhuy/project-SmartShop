@@ -27,13 +27,16 @@ public class RedisRateLimitStore(IConnectionMultiplexer multiplexer, ILogger<Red
             var db = multiplexer.GetDatabase();
             var redisKey = $"rl:{key}";
 
-            var result = (RedisResult[])await db.ScriptEvaluateAsync(
+            var rawResult = (RedisResult[]?)await db.ScriptEvaluateAsync(
                 IncrementScript,
                 keys: [redisKey],
                 values: [(long)window.TotalSeconds]);
 
-            var count = (long)result[0];
-            var ttlSeconds = (long)result[1];
+            if (rawResult is null)
+                return (1, DateTimeOffset.UtcNow.Add(window));
+
+            var count = (long)rawResult[0];
+            var ttlSeconds = (long)rawResult[1];
 
             // TTL -1 means no expire was set (race condition edge case — use window as fallback)
             var resetAt = ttlSeconds > 0

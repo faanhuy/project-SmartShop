@@ -54,7 +54,9 @@ public class StoresController(IMediator mediator, IStoreInventoryRepository inve
     public async Task<ActionResult<ApiResponse<StoreDto>>> CreateStore(
         [FromBody] CreateStoreRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new CreateStoreCommand(request.Name, request.Address, request.Phone), ct);
+        var result = await mediator.Send(new CreateStoreCommand(
+            request.Name, request.Address, request.Phone,
+            request.ProvinceId, request.WardId, request.Street), ct);
         return Ok(result);
     }
 
@@ -64,7 +66,9 @@ public class StoresController(IMediator mediator, IStoreInventoryRepository inve
     public async Task<ActionResult<ApiResponse<StoreDto>>> UpdateStore(
         Guid id, [FromBody] UpdateStoreRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new UpdateStoreCommand(id, request.Name, request.Address, request.Phone, request.IsActive), ct);
+        var result = await mediator.Send(new UpdateStoreCommand(
+            id, request.Name, request.Address, request.Phone, request.IsActive,
+            request.ProvinceId, request.WardId, request.Street), ct);
         return Ok(result);
     }
 
@@ -98,6 +102,20 @@ public class StoresController(IMediator mediator, IStoreInventoryRepository inve
 }
 
 public record StockDto(Guid ProductId, Guid StoreId, int Quantity);
-public record CreateStoreRequest(string Name, string Address, string Phone);
-public record UpdateStoreRequest(string Name, string Address, string Phone, bool IsActive);
+public record CreateStoreRequest(
+    string Name,
+    string Address,
+    string Phone,
+    int? ProvinceId = null,
+    int? WardId = null,
+    string? Street = null);
+
+public record UpdateStoreRequest(
+    string Name,
+    string Address,
+    string Phone,
+    bool IsActive,
+    int? ProvinceId = null,
+    int? WardId = null,
+    string? Street = null);
 public record UpdateInventoryRequest(int Quantity);

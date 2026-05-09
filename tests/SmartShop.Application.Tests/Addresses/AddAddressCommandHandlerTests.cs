@@ -81,4 +81,23 @@ public class AddAddressCommandHandlerTests
         _addressRepo.Verify(r => r.AddAsync(It.IsAny<UserAddress>(), default), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
+
+    [Fact]
+    public async Task AddAddress_WithProvinceIdAndWardId_SavesThem()
+    {
+        var userId = Guid.NewGuid().ToString();
+        _addressRepo.Setup(r => r.GetByUserIdAsync(userId, default))
+                    .ReturnsAsync(new List<UserAddress>());
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var command = new AddAddressCommand(userId, "Nhà riêng", "Nguyen Van A", "0901234567",
+            "123 Đường Lê Lợi", "Phường Bến Nghé", "Quận 1", "TP.HCM",
+            ProvinceId: 1, WardId: 1001);
+
+        var result = await CreateHandler().Handle(command, default);
+
+        result.Data.Should().NotBeNull();
+        result.Data!.ProvinceId.Should().Be(1);
+        result.Data.WardId.Should().Be(1001);
+    }
 }

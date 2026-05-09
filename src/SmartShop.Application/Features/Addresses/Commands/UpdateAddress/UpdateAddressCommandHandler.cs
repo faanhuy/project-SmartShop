@@ -26,7 +26,9 @@ public class UpdateAddressCommandHandler(
             command.Street,
             command.Ward,
             command.District,
-            command.City);
+            command.City,
+            command.ProvinceId,
+            command.WardId);
 
         addressRepository.Update(address);
         await unitOfWork.SaveChangesAsync(cancellationToken);

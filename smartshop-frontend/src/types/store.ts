@@ -4,12 +4,22 @@ export interface Store {
   address: string;
   phone: string;
   isActive?: boolean;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
+  street?: string;
 }
 
 export interface CreateStoreRequest {
   name: string;
   address: string;
   phone: string;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
+  street?: string;
 }
 
 export interface UpdateStoreRequest {
@@ -17,6 +27,11 @@ export interface UpdateStoreRequest {
   address: string;
   phone: string;
   isActive: boolean;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
+  street?: string;
 }
 
 export interface StoreInventory {

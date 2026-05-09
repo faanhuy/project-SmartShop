@@ -16,16 +16,47 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<ICartRepository> _cartRepo = new();
     private readonly Mock<IOrderRepository> _orderRepo = new();
     private readonly Mock<IProductRepository> _productRepo = new();
+    private readonly Mock<IStoreRepository> _storeRepo = new();
+    private readonly Mock<IStoreInventoryRepository> _storeInventoryRepo = new();
     private readonly Mock<ICouponRepository> _couponRepo = new();
     private readonly Mock<ICouponUsageRepository> _couponUsageRepo = new();
     private readonly Mock<IUserRepository> _userRepo = new();
+    private readonly Mock<IUserAddressRepository> _userAddressRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Guid _storeId = Guid.NewGuid();
+    private readonly Guid _addressId = Guid.NewGuid();
 
     private PlaceOrderCommandHandler CreateHandler() =>
-        new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object, _couponRepo.Object, _couponUsageRepo.Object, _userRepo.Object, _uow.Object, _mediator.Object);
-    private static PlaceOrderCommand ValidCommand(Guid userId) =>
-        new(userId, "123 Main St", null, null);
+        new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object,
+            _storeRepo.Object, _storeInventoryRepo.Object,
+            _couponRepo.Object, _couponUsageRepo.Object,
+            _userRepo.Object, _userAddressRepo.Object, _uow.Object, _mediator.Object);
+
+    private PlaceOrderCommand ValidCommand(Guid userId, string? couponCode = null) =>
+        new(userId, _storeId, _addressId, null, couponCode);
+
+    private void SetupActiveStore()
+    {
+        var store = Store.Create("Store", "Addr", "123");
+        _storeRepo.Setup(r => r.GetByIdAsync(_storeId, default)).ReturnsAsync(store);
+    }
+
+    private void SetupInventory(Guid productId, int quantity)
+    {
+        var inventory = StoreInventory.Create(_storeId, productId, quantity);
+        _storeInventoryRepo
+            .Setup(r => r.GetByStoreAndProductsAsync(_storeId, It.IsAny<IEnumerable<Guid>>(), default))
+            .ReturnsAsync(new[] { inventory });
+    }
+
+    private void SetupDefaultAddress()
+    {
+        var address = UserAddress.Create(
+            Guid.NewGuid().ToString(), "Home", "Test User", "0901234567",
+            "123 Main St", null, "Q1", "TP.HCM");
+        _userAddressRepo.Setup(r => r.GetByIdAsync(_addressId, default)).ReturnsAsync(address);
+    }
 
     [Fact]
     public async Task Handle_ValidCart_CreatesOrderAndReturnsDto()
@@ -34,10 +65,13 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 2, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        SetupDefaultAddress();
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         var result = await CreateHandler().Handle(ValidCommand(userId), default);
@@ -77,10 +111,11 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 1, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         product.Deactivate();
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        SetupActiveStore();
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
 
         var act = () => CreateHandler().Handle(ValidCommand(userId), default);
@@ -95,10 +130,12 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 5, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 2, Guid.NewGuid(), "laptop"); // only 2 in stock
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 2); // only 2 in stock
 
         var act = () => CreateHandler().Handle(ValidCommand(userId), default);
 
@@ -106,22 +143,27 @@ public class PlaceOrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCart_ReducesProductStock()
+    public async Task Handle_ValidCart_ReducesInventoryStock()
     {
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 2, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
+        var inventory = StoreInventory.Create(_storeId, productId, 10);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        _storeInventoryRepo
+            .Setup(r => r.GetByStoreAndProductsAsync(_storeId, It.IsAny<IEnumerable<Guid>>(), default))
+            .ReturnsAsync(new[] { inventory });
+        SetupDefaultAddress();
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         await CreateHandler().Handle(ValidCommand(userId), default);
 
-        _productRepo.Verify(r => r.Update(It.IsAny<Product>()), Times.Once);
-        product.Stock.Should().Be(8); // 10 - 2
+        inventory.Quantity.Should().Be(8); // 10 - 2
     }
 
     [Fact]
@@ -131,35 +173,40 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 1, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 5, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 5);
+        SetupDefaultAddress();
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         await CreateHandler().Handle(ValidCommand(userId), default);
 
         cart.Items.Should().BeEmpty();
     }
+
     [Fact]
     public async Task Handle_ValidCoupon_AppliesDiscountAndSavesUsage()
     {
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var couponId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 2, 100m); // 200k
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("SALE10", SmartShop.Domain.Enums.DiscountType.Percentage, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 100);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        SetupDefaultAddress();
         _couponRepo.Setup(r => r.GetByCodeAsync("SALE10", default)).ReturnsAsync(coupon);
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
-        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "SALE10");
-        var result = await CreateHandler().Handle(cmd, default);
+        var result = await CreateHandler().Handle(ValidCommand(userId, "SALE10"), default);
 
         result.CouponCode.Should().Be("SALE10");
         result.DiscountAmount.Should().Be(20); // 10% of 200
@@ -174,15 +221,17 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 1, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("EXPIRED", SmartShop.Domain.Enums.DiscountType.FixedAmount, 50, DateTime.UtcNow.AddDays(-1), 5, "desc", 50);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        SetupDefaultAddress();
         _couponRepo.Setup(r => r.GetByCodeAsync("EXPIRED", default)).ReturnsAsync(coupon);
 
-        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "EXPIRED");
-        var act = () => CreateHandler().Handle(cmd, default);
+        var act = () => CreateHandler().Handle(ValidCommand(userId, "EXPIRED"), default);
         await act.Should().ThrowAsync<ConflictException>().WithMessage("*hết hạn*");
     }
 
@@ -193,16 +242,18 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 1, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("ONCE", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 50);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        SetupDefaultAddress();
         _couponRepo.Setup(r => r.GetByCodeAsync("ONCE", default)).ReturnsAsync(coupon);
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(true);
 
-        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "ONCE");
-        var act = () => CreateHandler().Handle(cmd, default);
+        var act = () => CreateHandler().Handle(ValidCommand(userId, "ONCE"), default);
         await act.Should().ThrowAsync<ConflictException>().WithMessage("*đã sử dụng*");
     }
 
@@ -213,16 +264,18 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 1, 40m); // chỉ 40k
-        var product = Product.Create("Laptop", "Desc", 40m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 40m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("MIN100", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 100);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        SetupDefaultAddress();
         _couponRepo.Setup(r => r.GetByCodeAsync("MIN100", default)).ReturnsAsync(coupon);
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
 
-        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "MIN100");
-        var act = () => CreateHandler().Handle(cmd, default);
+        var act = () => CreateHandler().Handle(ValidCommand(userId, "MIN100"), default);
         await act.Should().ThrowAsync<ConflictException>().WithMessage("*tối thiểu*");
     }
 
@@ -233,18 +286,48 @@ public class PlaceOrderCommandHandlerTests
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         cart.AddItem(productId, 1, 100m);
-        var product = Product.Create("Laptop", "Desc", 100m, 10, Guid.NewGuid(), "laptop");
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("LIMITED", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 1, "desc", 50);
         // Đã dùng hết lượt
         typeof(Coupon).GetProperty("UsedQuantity")!.SetValue(coupon, 1);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        SetupDefaultAddress();
         _couponRepo.Setup(r => r.GetByCodeAsync("LIMITED", default)).ReturnsAsync(coupon);
         _couponRepo.Setup(r => r.HasUsageByUserAsync(coupon.Id, userId, default)).ReturnsAsync(false);
 
-        var cmd = new PlaceOrderCommand(userId, "123 Main St", null, "LIMITED");
-        var act = () => CreateHandler().Handle(cmd, default);
+        var act = () => CreateHandler().Handle(ValidCommand(userId, "LIMITED"), default);
         await act.Should().ThrowAsync<ConflictException>().WithMessage("*hết lượt*");
+    }
+
+    [Fact]
+    public async Task Handle_WithStructuredShipping_SetsSnapshotFields()
+    {
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var cart = CartEntity.Create(userId);
+        cart.AddItem(productId, 1, 100m);
+        var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
+
+        var address = UserAddress.Create(
+            userId.ToString(), "Home", "Test User", "0901234567",
+            "123 Đường Lê Lợi", "Phường Bến Nghé", "Q1", "TP. Hồ Chí Minh");
+        _userAddressRepo.Setup(r => r.GetByIdAsync(_addressId, default)).ReturnsAsync(address);
+
+        _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
+        _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
+        SetupActiveStore();
+        SetupInventory(productId, 10);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var result = await CreateHandler().Handle(ValidCommand(userId), default);
+
+        result.Should().NotBeNull();
+        result.ShippingStreet.Should().Be("123 Đường Lê Lợi");
+        result.ShippingWardName.Should().Be("Phường Bến Nghé");
+        result.ShippingProvinceName.Should().Be("TP. Hồ Chí Minh");
     }
 }

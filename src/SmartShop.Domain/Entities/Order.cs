@@ -21,6 +21,13 @@ public class Order : BaseAuditableEntity
 
     public Guid? StoreId { get; private set; }
 
+    public Guid? ShippingAddressId { get; private set; }
+    public string? ShippingStreet { get; private set; }
+    public int? ShippingWardId { get; private set; }
+    public int? ShippingProvinceId { get; private set; }
+    public Ward? ShippingWard { get; private set; }
+    public Province? ShippingProvince { get; private set; }
+
     public User? User { get; private set; }
     public Store? Store { get; private set; }
 
@@ -29,13 +36,24 @@ public class Order : BaseAuditableEntity
 
     private Order() { }
 
-    public static Order Create(Guid userId, string shippingAddress, string? notes = null)
+    public static Order Create(
+        Guid userId,
+        string shippingAddress,
+        string? notes = null,
+        string? shippingStreet = null,
+        int? shippingWardId = null,
+        int? shippingProvinceId = null,
+        Guid? shippingAddressId = null)
     {
         return new Order
         {
             UserId = userId,
             ShippingAddress = shippingAddress,
-            Notes = notes
+            Notes = notes,
+            ShippingStreet = shippingStreet,
+            ShippingWardId = shippingWardId,
+            ShippingProvinceId = shippingProvinceId,
+            ShippingAddressId = shippingAddressId
         };
     }
 

@@ -4,14 +4,19 @@ import { FiEdit2, FiPlus, FiX } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import { storeService } from '../../services/storeService';
 import type { Store, CreateStoreRequest, UpdateStoreRequest } from '../../types/store';
+import { AddressSelector, type AddressSelection } from '@/components/AddressSelector';
 
 // ─── Modal form state ─────────────────────────────────────────────────────────
 
 interface FormState {
   name: string;
-  address: string;
   phone: string;
   isActive: boolean;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
+  street: string;
 }
 
 interface FormErrors {
@@ -20,7 +25,12 @@ interface FormErrors {
   phone?: string;
 }
 
-const EMPTY_FORM: FormState = { name: '', address: '', phone: '', isActive: true };
+const EMPTY_FORM: FormState = {
+  name: '',
+  phone: '',
+  isActive: true,
+  street: '',
+};
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -59,9 +69,13 @@ export default function AdminStoresPage() {
     setEditingStore(store);
     setForm({
       name: store.name,
-      address: store.address,
       phone: store.phone,
       isActive: store.isActive ?? true,
+      provinceId: store.provinceId,
+      wardId: store.wardId,
+      provinceName: store.provinceName,
+      wardName: store.wardName,
+      street: store.street ?? '',
     });
     setErrors({});
     setModalOpen(true);
@@ -74,10 +88,27 @@ export default function AdminStoresPage() {
     setErrors({});
   };
 
+  const handleAddressSelection = (selection: AddressSelection) => {
+    setForm((f) => ({
+      ...f,
+      provinceId: selection.provinceId,
+      wardId: selection.wardId,
+      provinceName: selection.provinceName,
+      wardName: selection.wardName,
+      street: selection.street,
+    }));
+  };
+
+  const buildAddressString = () => {
+    const parts = [form.street, form.wardName, form.provinceName].filter(Boolean);
+    return parts.join(', ');
+  };
+
   const validate = (): boolean => {
     const next: FormErrors = {};
     if (!form.name.trim()) next.name = 'Tên chi nhánh không được để trống.';
-    if (!form.address.trim()) next.address = 'Địa chỉ không được để trống.';
+    if (!form.provinceId || !form.wardId || !form.street.trim())
+      next.address = 'Vui lòng chọn tỉnh/thành, phường/xã và nhập số nhà, tên đường.';
     if (!form.phone.trim()) next.phone = 'Số điện thoại không được để trống.';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -86,21 +117,32 @@ export default function AdminStoresPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
     setSubmitting(true);
+    const address = buildAddressString();
     try {
       if (editingStore) {
         const body: UpdateStoreRequest = {
           name: form.name.trim(),
-          address: form.address.trim(),
+          address,
           phone: form.phone.trim(),
           isActive: form.isActive,
+          provinceId: form.provinceId,
+          wardId: form.wardId,
+          provinceName: form.provinceName,
+          wardName: form.wardName,
+          street: form.street.trim(),
         };
         await storeService.updateStore(editingStore.id, body);
         toast.success('Đã cập nhật chi nhánh.');
       } else {
         const body: CreateStoreRequest = {
           name: form.name.trim(),
-          address: form.address.trim(),
+          address,
           phone: form.phone.trim(),
+          provinceId: form.provinceId,
+          wardId: form.wardId,
+          provinceName: form.provinceName,
+          wardName: form.wardName,
+          street: form.street.trim(),
         };
         await storeService.createStore(body);
         toast.success('Đã thêm chi nhánh mới.');
@@ -112,6 +154,13 @@ export default function AdminStoresPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const displayAddress = (store: Store) => {
+    if (store.street && store.wardName && store.provinceName) {
+      return `${store.street}, ${store.wardName}, ${store.provinceName}`;
+    }
+    return store.address;
   };
 
   return (
@@ -149,7 +198,7 @@ export default function AdminStoresPage() {
               {stores.map((store) => (
                 <tr key={store.id} className="hover:bg-gray-50">
                   <td className="px-5 py-3 font-medium text-gray-800">{store.name}</td>
-                  <td className="px-5 py-3 text-gray-600">{store.address}</td>
+                  <td className="px-5 py-3 text-gray-600">{displayAddress(store)}</td>
                   <td className="px-5 py-3 text-gray-600">{store.phone}</td>
                   <td className="px-5 py-3 text-center">
                     {store.isActive !== false ? (
@@ -181,9 +230,9 @@ export default function AdminStoresPage() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] flex flex-col">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
               <h3 className="text-base font-semibold text-gray-800">
                 {editingStore ? 'Chỉnh sửa chi nhánh' : 'Thêm chi nhánh mới'}
               </h3>
@@ -197,7 +246,7 @@ export default function AdminStoresPage() {
             </div>
 
             {/* Modal body */}
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-6 py-5 space-y-4 overflow-y-auto">
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -212,28 +261,7 @@ export default function AdminStoresPage() {
                     errors.name ? 'border-red-400' : 'border-gray-300'
                   }`}
                 />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-500">{errors.name}</p>
-                )}
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.address}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                  placeholder="Ví dụ: 123 Lê Lợi, Quận 1, TP.HCM"
-                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 ${
-                    errors.address ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                />
-                {errors.address && (
-                  <p className="mt-1 text-xs text-red-500">{errors.address}</p>
-                )}
+                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
               </div>
 
               {/* Phone */}
@@ -250,9 +278,25 @@ export default function AdminStoresPage() {
                     errors.phone ? 'border-red-400' : 'border-gray-300'
                   }`}
                 />
-                {errors.phone && (
-                  <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
-                )}
+                {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+              </div>
+
+              {/* Address via AddressSelector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Địa chỉ chi nhánh <span className="text-red-500">*</span>
+                </label>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <AddressSelector
+                    value={{
+                      provinceId: form.provinceId,
+                      wardId: form.wardId,
+                      street: form.street,
+                    }}
+                    onChange={handleAddressSelection}
+                  />
+                </div>
+                {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
               </div>
 
               {/* isActive toggle — edit mode only */}
@@ -273,7 +317,7 @@ export default function AdminStoresPage() {
             </div>
 
             {/* Modal footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t shrink-0">
               <button
                 onClick={closeModal}
                 disabled={submitting}

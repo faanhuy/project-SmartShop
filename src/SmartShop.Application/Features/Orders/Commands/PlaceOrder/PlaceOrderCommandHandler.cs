@@ -17,6 +17,7 @@ public class PlaceOrderCommandHandler(
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
     IUserRepository userRepository,
+    IUserAddressRepository userAddressRepository,
     IUnitOfWork unitOfWork,
     IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
@@ -57,8 +58,31 @@ public class PlaceOrderCommandHandler(
         // Phase 1 — Validate stock (read-only)
         ValidateStock(cart.Items, products, inventories);
 
+        // Load address và build shipping info
+        var address = await userAddressRepository.GetByIdAsync(request.AddressId, cancellationToken)
+            ?? throw new NotFoundException("Address", request.AddressId);
+
+        var wardName = address.WardEntity?.Name ?? address.Ward;
+        var provinceName = address.Province?.Name ?? address.City;
+
+        var shippingAddress = string.Join(", ", new[]
+        {
+            address.RecipientName,
+            address.Phone,
+            address.Street,
+            wardName,
+            provinceName
+        }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
         // Tạo Order entity
-        var order = Order.Create(request.UserId, request.ShippingAddress, request.Notes);
+        var order = Order.Create(
+            request.UserId,
+            shippingAddress,
+            request.Notes,
+            shippingStreet: address.Street,
+            shippingWardId: address.WardId,
+            shippingProvinceId: address.ProvinceId,
+            shippingAddressId: address.Id);
         order.SetStoreId(request.StoreId);
         order.SetPaymentMethod(request.PaymentMethod);
 
@@ -152,6 +176,12 @@ public class PlaceOrderCommandHandler(
             OriginalAmount = order.OriginalAmount,
             DiscountAmount = order.DiscountAmount,
             ShippingAddress = order.ShippingAddress,
+            ShippingAddressId = order.ShippingAddressId,
+            ShippingStreet = order.ShippingStreet,
+            ShippingWardId = order.ShippingWardId,
+            ShippingProvinceId = order.ShippingProvinceId,
+            ShippingWardName = wardName,
+            ShippingProvinceName = provinceName,
             CouponCode = order.CouponCode,
             Notes = order.Notes,
             PaymentMethod = order.PaymentMethod.ToString(),

@@ -11,7 +11,9 @@ public record UpdateAddressRequest(
     string Street,
     string? Ward,
     string District,
-    string City);
+    string City,
+    int? ProvinceId = null,
+    int? WardId = null);
 
 public record UpdateAddressCommand(
     Guid AddressId,
@@ -22,4 +24,6 @@ public record UpdateAddressCommand(
     string Street,
     string? Ward,
     string District,
-    string City) : IRequest<ApiResponse<AddressDto>>;
+    string City,
+    int? ProvinceId = null,
+    int? WardId = null) : IRequest<ApiResponse<AddressDto>>;

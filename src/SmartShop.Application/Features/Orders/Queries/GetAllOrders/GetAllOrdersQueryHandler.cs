@@ -15,25 +15,31 @@ public class GetCouponsQueryHandler(IOrderRepository orderRepository)
 
         var dtos = items.Select(o => new OrderDto
         {
-            Id              = o.Id,
-            UserId          = o.UserId,
-            UserName        = o.User != null ? $"{o.User.FirstName} {o.User.LastName}".Trim() : string.Empty,
-            Status          = o.Status.ToString(),
-            TotalAmount     = o.TotalAmount,
-            ShippingAddress = o.ShippingAddress,
-            Notes           = o.Notes,
-            PaymentMethod   = o.PaymentMethod.ToString(),
-            PaymentStatus   = o.PaymentStatus.ToString(),
-            PaidAt          = o.PaidAt,
-            VnpayTransactionId = o.VnpayTransactionId,
-            Items           = o.Items.Select(i => new OrderItemDto
+            Id                  = o.Id,
+            UserId              = o.UserId,
+            UserName            = o.User != null ? $"{o.User.FirstName} {o.User.LastName}".Trim() : string.Empty,
+            Status              = o.Status.ToString(),
+            TotalAmount         = o.TotalAmount,
+            ShippingAddress     = o.ShippingAddress,
+            ShippingAddressId   = o.ShippingAddressId,
+            ShippingStreet      = o.ShippingStreet,
+            ShippingWardId      = o.ShippingWardId,
+            ShippingProvinceId  = o.ShippingProvinceId,
+            ShippingWardName    = o.ShippingWard?.Name,
+            ShippingProvinceName = o.ShippingProvince?.Name,
+            Notes               = o.Notes,
+            PaymentMethod       = o.PaymentMethod.ToString(),
+            PaymentStatus       = o.PaymentStatus.ToString(),
+            PaidAt              = o.PaidAt,
+            VnpayTransactionId  = o.VnpayTransactionId,
+            Items               = o.Items.Select(i => new OrderItemDto
             {
-                ProductId   = i.ProductId,
-                ProductName = i.ProductName,
+                ProductId       = i.ProductId,
+                ProductName     = i.ProductName,
                 ProductImageUrl = i.Product?.ImageUrl,
-                Quantity    = i.Quantity,
-                UnitPrice   = i.UnitPrice,
-                SubTotal    = i.SubTotal
+                Quantity        = i.Quantity,
+                UnitPrice       = i.UnitPrice,
+                SubTotal        = i.SubTotal
             }).ToList(),
             CreatedAt = o.CreatedAt
         });

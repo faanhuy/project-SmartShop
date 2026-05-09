@@ -21,7 +21,7 @@ public class UpdateProductCommandHandlerTests
         new(_productRepo.Object, _uow.Object, _cache.Object);
 
     private static Product CreateProduct(Guid categoryId) =>
-        Product.Create("Original Name", "Original Desc", 100m, 10, categoryId, "original-slug");
+        Product.Create("Original Name", "Original Desc", 100m, categoryId, "original-slug");
 
     [Fact]
     public async Task Handle_ExistingProduct_ReturnsUpdatedDto()

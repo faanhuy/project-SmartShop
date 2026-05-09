@@ -9,6 +9,7 @@ using SmartShop.Application.Interfaces;
 using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure.Caching;
 using SmartShop.Infrastructure.Data;
+using SmartShop.Infrastructure.Data.Seeders;
 using SmartShop.Infrastructure.Email;
 using SmartShop.Infrastructure.Payment;
 using SmartShop.Infrastructure.RateLimit;
@@ -51,6 +52,14 @@ public static class DependencyInjection
         services.AddScoped<IPaymentGateway, VNPayGateway>();
         services.AddScoped<IStoreRepository, StoreRepository>();
         services.AddScoped<IStoreInventoryRepository, StoreInventoryRepository>();
+        services.AddScoped<IProvinceRepository, ProvinceRepository>();
+        services.AddScoped<IWardRepository, WardRepository>();
+
+        services.AddScoped<IDataSeeder, AppSettingsSeeder>();
+        services.AddScoped<IDataSeeder, AdminUserSeeder>();
+        services.AddScoped<IDataSeeder, FaqDocumentSeeder>();
+        services.AddScoped<IDataSeeder, CatalogSeeder>();
+        services.AddScoped<IDataSeeder, GeographySeeder>();
 
         // AI — chọn provider qua config "AI:Provider" (Groq | Gemini), mặc định Groq
         // Groq: free 500K tokens/day, llama-3.3-70b, nhanh, hiểu tiếng Việt tốt

@@ -16,6 +16,12 @@ public class UserAddress : BaseAuditableEntity
     public string City { get; private set; } = string.Empty;
     public bool IsDefault { get; private set; }
 
+    // Structured geography FKs (Sprint 18B)
+    public int? ProvinceId { get; private set; }
+    public int? WardId { get; private set; }
+    public Province? Province { get; private set; }
+    public Ward? WardEntity { get; private set; }
+
     public static UserAddress Create(
         string userId,
         string label,
@@ -24,14 +30,14 @@ public class UserAddress : BaseAuditableEntity
         string street,
         string? ward,
         string district,
-        string city)
+        string city,
+        int? provinceId = null,
+        int? wardId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(label);
         ArgumentException.ThrowIfNullOrWhiteSpace(recipientName);
         ArgumentException.ThrowIfNullOrWhiteSpace(phone);
         ArgumentException.ThrowIfNullOrWhiteSpace(street);
-        ArgumentException.ThrowIfNullOrWhiteSpace(district);
         ArgumentException.ThrowIfNullOrWhiteSpace(city);
 
         return new UserAddress
@@ -44,7 +50,9 @@ public class UserAddress : BaseAuditableEntity
             Ward = ward,
             District = district,
             City = city,
-            IsDefault = false
+            IsDefault = false,
+            ProvinceId = provinceId,
+            WardId = wardId
         };
     }
 
@@ -55,13 +63,13 @@ public class UserAddress : BaseAuditableEntity
         string street,
         string? ward,
         string district,
-        string city)
+        string city,
+        int? provinceId = null,
+        int? wardId = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(label);
         ArgumentException.ThrowIfNullOrWhiteSpace(recipientName);
         ArgumentException.ThrowIfNullOrWhiteSpace(phone);
         ArgumentException.ThrowIfNullOrWhiteSpace(street);
-        ArgumentException.ThrowIfNullOrWhiteSpace(district);
         ArgumentException.ThrowIfNullOrWhiteSpace(city);
 
         Label = label;
@@ -71,6 +79,8 @@ public class UserAddress : BaseAuditableEntity
         Ward = ward;
         District = district;
         City = city;
+        ProvinceId = provinceId;
+        WardId = wardId;
     }
 
     public void SetAsDefault() => IsDefault = true;

@@ -11,6 +11,7 @@ import { addressService } from '../services/addressService';
 import { useAuthStore } from '../store/authStore';
 import type { AddressDto } from '../types/order';
 import { formatDate } from '@/utils/formatters';
+import { AddressSelector, type AddressSelection } from '@/components/AddressSelector';
 
 type Tab = 'profile' | 'addresses';
 
@@ -23,6 +24,10 @@ interface AddressFormData {
   ward: string;
   district: string;
   city: string;
+  provinceId?: number;
+  wardId?: number;
+  provinceName?: string;
+  wardName?: string;
 }
 
 const EMPTY_FORM: AddressFormData = {
@@ -49,9 +54,13 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
           recipientName: initial.recipientName,
           phone: initial.phone,
           street: initial.street,
-          ward: initial.ward ?? '',
+          ward: initial.wardName ?? initial.ward ?? '',
           district: initial.district,
-          city: initial.city,
+          city: initial.provinceName ?? initial.city,
+          provinceId: initial.provinceId,
+          wardId: initial.wardId,
+          provinceName: initial.provinceName,
+          wardName: initial.wardName,
         }
       : EMPTY_FORM
   );
@@ -60,10 +69,27 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
   const set = (field: keyof AddressFormData) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const handleAddressSelection = (selection: AddressSelection) => {
+    setForm((f) => ({
+      ...f,
+      street: selection.street,
+      ward: selection.wardName,
+      city: selection.provinceName,
+      provinceId: selection.provinceId,
+      wardId: selection.wardId,
+      provinceName: selection.provinceName,
+      wardName: selection.wardName,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.recipientName.trim() || !form.phone.trim() || !form.street.trim() || !form.district.trim() || !form.city.trim()) {
-      toast.error('Vui lòng điền đầy đủ các trường bắt buộc.');
+    if (!form.recipientName.trim() || !form.phone.trim()) {
+      toast.error('Vui lòng điền đầy đủ họ tên người nhận và số điện thoại.');
+      return;
+    }
+    if (!form.provinceId || !form.wardId || !form.street.trim()) {
+      toast.error('Vui lòng chọn tỉnh/thành phố, phường/xã và nhập số nhà, đường.');
       return;
     }
     setSaving(true);
@@ -73,9 +99,13 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
         recipientName: form.recipientName.trim(),
         phone: form.phone.trim(),
         street: form.street.trim(),
-        ward: form.ward.trim() || undefined,
-        district: form.district.trim(),
-        city: form.city.trim(),
+        ward: form.wardName ?? (form.ward.trim() || undefined),
+        district: form.district.trim() || '',
+        city: form.provinceName ?? form.city.trim(),
+        provinceId: form.provinceId,
+        wardId: form.wardId,
+        provinceName: form.provinceName,
+        wardName: form.wardName,
       };
       if (initial) {
         await addressService.update(initial.id, payload);
@@ -95,7 +125,7 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-base font-semibold text-gray-800 mb-4">
           {initial ? 'Sửa địa chỉ' : 'Thêm địa chỉ mới'}
         </h3>
@@ -133,49 +163,21 @@ function AddressModal({ initial, onClose, onSaved }: AddressModalProps) {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Số nhà, đường <span className="text-red-500">*</span>
-            </label>
-            <input
-              required
-              value={form.street}
-              onChange={set('street')}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+
+          <div className="border border-gray-200 rounded-lg p-3">
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Địa chỉ <span className="text-red-500">*</span>
+            </p>
+            <AddressSelector
+              value={{
+                provinceId: form.provinceId,
+                wardId: form.wardId,
+                street: form.street,
+              }}
+              onChange={handleAddressSelection}
             />
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phường/Xã</label>
-              <input
-                value={form.ward}
-                onChange={set('ward')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quận/Huyện <span className="text-red-500">*</span>
-              </label>
-              <input
-                required
-                value={form.district}
-                onChange={set('district')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tỉnh/TP <span className="text-red-500">*</span>
-              </label>
-              <input
-                required
-                value={form.city}
-                onChange={set('city')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-              />
-            </div>
-          </div>
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -419,7 +421,9 @@ export default function ProfilePage() {
                       <p className="text-sm font-medium text-gray-800">{addr.recipientName}</p>
                       <p className="text-sm text-gray-500">{addr.phone}</p>
                       <p className="text-sm text-gray-500 mt-0.5">
-                        {[addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
+                        {addr.street && addr.wardName && addr.provinceName
+                          ? `${addr.street}, ${addr.wardName}, ${addr.provinceName}`
+                          : [addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
