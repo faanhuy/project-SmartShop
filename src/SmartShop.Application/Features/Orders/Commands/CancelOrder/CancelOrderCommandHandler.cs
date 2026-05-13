@@ -11,6 +11,7 @@ public class CancelOrderCommandHandler(
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
     IStoreInventoryRepository storeInventoryRepository,
+    IStoreSizeInventoryRepository storeSizeInventoryRepository,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<CancelOrderCommand>
 {
@@ -42,19 +43,53 @@ public class CancelOrderCommandHandler(
                 couponUsageRepository.Delete(usage);
         }
 
-        // Restore StoreInventory nếu order có StoreId
+        // Restore inventory nếu order có StoreId
         if (order.StoreId.HasValue)
         {
             foreach (var item in order.Items)
             {
-                var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(
-                    order.StoreId.Value, item.ProductId, cancellationToken);
+                if (item.SizeId.HasValue)
+                {
+                    var sizeInv = await storeSizeInventoryRepository.GetAsync(
+                        order.StoreId.Value, item.ProductId, item.SizeId.Value, cancellationToken);
 
-                if (inventory is not null)
-                    inventory.RestoreStock(item.Quantity);
+                    if (sizeInv is not null)
+                    {
+                        sizeInv.RestoreStock(item.Quantity);
+                        storeSizeInventoryRepository.Update(sizeInv);
+                    }
+
+                    await RestoreStoreInventoryAsync(
+                        order.StoreId.Value, item.ProductId, item.Quantity, cancellationToken);
+                }
+                else
+                {
+                    var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(
+                        order.StoreId.Value, item.ProductId, cancellationToken);
+
+                    if (inventory is not null)
+                        inventory.RestoreStock(item.Quantity);
+                }
             }
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task RestoreStoreInventoryAsync(
+        Guid storeId, Guid productId, int quantity, CancellationToken cancellationToken)
+    {
+        var inventory = await storeInventoryRepository.GetByStoreAndProductAsync(
+            storeId, productId, cancellationToken);
+
+        if (inventory is null)
+        {
+            inventory = Domain.Entities.StoreInventory.Create(storeId, productId, quantity);
+            await storeInventoryRepository.AddAsync(inventory, cancellationToken);
+            return;
+        }
+
+        inventory.RestoreStock(quantity);
+        storeInventoryRepository.Update(inventory);
     }
 }

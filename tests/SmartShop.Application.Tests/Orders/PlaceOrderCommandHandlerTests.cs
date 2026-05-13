@@ -1,6 +1,7 @@
 using FluentAssertions;
 using MediatR;
 using Moq;
+using SmartShop.Application.Services;
 using SmartShop.Domain.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
@@ -18,20 +19,45 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<IProductRepository> _productRepo = new();
     private readonly Mock<IStoreRepository> _storeRepo = new();
     private readonly Mock<IStoreInventoryRepository> _storeInventoryRepo = new();
+    private readonly Mock<IStoreSizeInventoryRepository> _storeSizeInventoryRepo = new();
     private readonly Mock<ICouponRepository> _couponRepo = new();
     private readonly Mock<ICouponUsageRepository> _couponUsageRepo = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IUserAddressRepository> _userAddressRepo = new();
+    private readonly Mock<IPriceCampaignRepository> _priceCampaignRepo = new();
+    private readonly Mock<IComboPromotionService> _comboService = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _storeId = Guid.NewGuid();
     private readonly Guid _addressId = Guid.NewGuid();
 
+    public PlaceOrderCommandHandlerTests()
+    {
+        // Default: no effective price rules
+        _priceCampaignRepo
+            .Setup(r => r.GetEffectivePriceItemsAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<(Guid, Guid?)>>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(Guid, Guid?), (int, decimal)>());
+
+        // Default: no combo match
+        _comboService
+            .Setup(s => s.FindApplicableComboAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<CartItemInput>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ComboMatchResult?)null);
+    }
+
     private PlaceOrderCommandHandler CreateHandler() =>
         new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object,
-            _storeRepo.Object, _storeInventoryRepo.Object,
+            _storeRepo.Object, _storeInventoryRepo.Object, _storeSizeInventoryRepo.Object,
             _couponRepo.Object, _couponUsageRepo.Object,
-            _userRepo.Object, _userAddressRepo.Object, _uow.Object, _mediator.Object);
+            _userRepo.Object, _userAddressRepo.Object,
+            _priceCampaignRepo.Object, _comboService.Object,
+            _uow.Object, _mediator.Object);
 
     private PlaceOrderCommand ValidCommand(Guid userId, string? couponCode = null) =>
         new(userId, _storeId, _addressId, null, couponCode);

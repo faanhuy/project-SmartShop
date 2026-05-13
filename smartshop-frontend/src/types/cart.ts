@@ -4,7 +4,10 @@ export interface CartItemDto {
   productImageUrl: string | null;
   quantity: number;
   unitPrice: number;
+  originalUnitPrice: number | null;
   subTotal: number;
+  sizeId: string | null;
+  sizeLabel: string | null;
 }
 
 export interface CartDto {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu, FiExternalLink, FiMapPin, FiArchive } from 'react-icons/fi';
+import { FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu, FiExternalLink, FiMapPin, FiArchive, FiPercent, FiGift, FiSliders } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 
 interface AdminLayoutProps {
@@ -14,7 +14,10 @@ const NAV_ITEMS = [
   { to: '/admin/orders',    label: 'Đơn giao',       icon: FiShoppingBag, end: false },
   { to: '/admin/coupons',   label: 'Mã giảm giá',    icon: FiTag,         end: false },
   { to: '/admin/stores',    label: 'Chi nhánh',      icon: FiMapPin,      end: false },
-  { to: '/admin/inventory', label: 'Quản lý tồn kho', icon: FiArchive,    end: false },
+  { to: '/admin/inventory',          label: 'Quản lý tồn kho',  icon: FiArchive,  end: false },
+  { to: '/admin/sizes',              label: 'Quản lý kích cỡ',   icon: FiSliders,  end: false },
+  { to: '/admin/promotional-prices', label: 'Giá khuyến mãi',   icon: FiPercent,  end: false },
+  { to: '/admin/combos',             label: 'Combo',             icon: FiGift,     end: false },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {

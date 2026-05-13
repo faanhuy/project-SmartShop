@@ -14,7 +14,7 @@ public class UpdateCartItemCommandHandler(
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken)
             ?? throw new NotFoundException("Cart", request.UserId);
 
-        cart.UpdateItemQuantity(request.ProductId, request.Quantity);
+        cart.UpdateItemQuantity(request.ProductId, request.Quantity, request.SizeId);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updatedCart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);

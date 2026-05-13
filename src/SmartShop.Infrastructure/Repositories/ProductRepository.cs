@@ -24,6 +24,13 @@ public class ProductRepository : IProductRepository
         return await _context.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
     }
 
+    public async Task<Product?> GetByIdWithSizesAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _context.Products
+            .Include(p => p.Sizes.OrderBy(s => s.DisplayOrder))
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
+    }
+
     public async Task<Product?> GetBySlugAsync(string slug, CancellationToken ct = default)
     {
         return await _context.Products.FirstOrDefaultAsync(p => p.Slug == slug, ct);

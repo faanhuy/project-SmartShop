@@ -9,6 +9,10 @@ public class OrderItem : BaseEntity
     public string ProductName { get; private set; } = string.Empty;
     public int Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
+    public Guid? SizeId { get; private set; }
+    public string? SizeLabel { get; private set; }
+    public decimal? OriginalUnitPrice { get; private set; }
+    public Guid? PromotionalPriceId { get; private set; }
 
     public Order? Order { get; private set; }
     public Product? Product { get; private set; }
@@ -17,7 +21,10 @@ public class OrderItem : BaseEntity
 
     private OrderItem() { }
 
-    public static OrderItem Create(Guid orderId, Guid productId, string productName, int quantity, decimal unitPrice)
+    public static OrderItem Create(
+        Guid orderId, Guid productId, string productName, int quantity, decimal unitPrice,
+        Guid? sizeId = null, string? sizeLabel = null,
+        decimal? originalUnitPrice = null, Guid? promotionalPriceId = null)
     {
         return new OrderItem
         {
@@ -25,7 +32,11 @@ public class OrderItem : BaseEntity
             ProductId = productId,
             ProductName = productName,
             Quantity = quantity,
-            UnitPrice = unitPrice
+            UnitPrice = unitPrice,
+            SizeId = sizeId,
+            SizeLabel = sizeLabel,
+            OriginalUnitPrice = originalUnitPrice,
+            PromotionalPriceId = promotionalPriceId
         };
     }
 }

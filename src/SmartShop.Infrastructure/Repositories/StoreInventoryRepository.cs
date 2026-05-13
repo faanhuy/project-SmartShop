@@ -49,6 +49,16 @@ public class StoreInventoryRepository(ApplicationDbContext context) : IStoreInve
         await context.StoreInventories.AddAsync(inventory, ct);
     }
 
+    public void Update(StoreInventory inventory)
+    {
+        context.StoreInventories.Update(inventory);
+    }
+
+    public async Task<StoreInventory?> GetAsync(Guid storeId, Guid productId, CancellationToken ct = default)
+    {
+        return await GetByStoreAndProductAsync(storeId, productId, ct);
+    }
+
     public async Task<int> GetTotalStockByProductAsync(Guid productId, CancellationToken ct = default)
     {
         return await context.StoreInventories

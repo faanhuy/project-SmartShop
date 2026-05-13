@@ -1,5 +1,6 @@
 using MediatR;
 using SmartShop.Application.DTOs;
+using SmartShop.Domain.Enums;
 
 namespace SmartShop.Application.Products.Commands.CreateProduct;
 
@@ -10,5 +11,7 @@ public record CreateProductCommand(
     Guid CategoryId,
     string Slug,
     string? ImageUrl = null,
-    decimal? OriginalPrice = null
+    decimal? OriginalPrice = null,
+    bool HasSizes = false,
+    SizeType? SizeType = null
 ) : IRequest<ProductDto>;

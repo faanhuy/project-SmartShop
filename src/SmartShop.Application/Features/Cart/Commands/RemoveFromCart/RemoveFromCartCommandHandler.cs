@@ -14,7 +14,7 @@ public class RemoveFromCartCommandHandler(
         var cart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken)
             ?? throw new NotFoundException("Cart", request.UserId);
 
-        cart.RemoveItem(request.ProductId);
+        cart.RemoveItem(request.ProductId, request.SizeId);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updatedCart = await cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);

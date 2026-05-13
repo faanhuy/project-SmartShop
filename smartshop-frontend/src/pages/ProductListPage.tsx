@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { categoryService, productService } from '../services/productService';
 import { cartService } from '../services/cartService';
+import { storeService } from '../services/storeService';
 import { useAuthStore } from '../store/authStore';
+import { useStoreSelectionStore } from '../store/useStoreSelectionStore';
 import type { CategoryDto, PagedResult, ProductDto } from '../types/product';
 import { FiSearch, FiCpu } from 'react-icons/fi';
 import AISearchBar from '../components/AISearchBar';
@@ -17,6 +19,7 @@ import { getImageUrl } from '../utils/imageUrl';
 export default function ProductListPage() {
   const navigate = useNavigate();
   const { isAuthenticated, refreshCartCount } = useAuthStore();
+  const { selectedStore } = useStoreSelectionStore();
 
   const [products, setProducts] = useState<PagedResult<ProductDto> | null>(null);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
@@ -27,6 +30,8 @@ export default function ProductListPage() {
   const [sortBy, setSortBy] = useState<number>(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [stockLoading, setStockLoading] = useState(false);
+  const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
   const [addingId, setAddingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,6 +46,39 @@ export default function ProductListPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [page, categoryId, search, sortBy]);
+
+  useEffect(() => {
+    const visibleProducts = products?.items ?? [];
+    if (!selectedStore || visibleProducts.length === 0) {
+      setStockByProductId({});
+      return;
+    }
+
+    let cancelled = false;
+    setStockLoading(true);
+    Promise.all(
+      visibleProducts.map((product) =>
+        storeService
+          .getProductStock(selectedStore.id, product.id)
+          .then((stock) => [product.id, stock.quantity] as const)
+          .catch(() => [product.id, 0] as const),
+      ),
+    )
+      .then((entries) => {
+        if (!cancelled) {
+          setStockByProductId(Object.fromEntries(entries));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setStockLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [products, selectedStore]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +100,15 @@ export default function ProductListPage() {
     e.preventDefault(); // không navigate vào detail page
     if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+    if (product.hasSizes) {
+      toast('Vui lòng chọn size trước khi thêm vào giỏ.');
+      navigate(`/products/${product.slug}`);
+      return;
+    }
+    if (selectedStore && stockByProductId[product.id] === 0) {
+      toast.error('Sản phẩm đang hết hàng tại chi nhánh đã chọn.');
       return;
     }
     setAddingId(product.id);
@@ -215,15 +262,27 @@ export default function ProductListPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {products?.items.map((product) => (
+                {products?.items.map((product) => {
+                  const stock = selectedStore ? stockByProductId[product.id] : null;
+                  const outOfStock = stock === 0;
+                  const quickAddDisabled = addingId === product.id || outOfStock || stockLoading;
+
+                  return (
                   <Link
                     key={product.id}
                     to={`/products/${product.slug}`}
-                    className="relative bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-rose-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer"
+                    className={`relative bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-rose-200 border border-transparent transition-all duration-200 p-3 flex flex-col group cursor-pointer ${
+                      outOfStock ? 'opacity-75' : ''
+                    }`}
                   >
                     <div className="absolute top-2 right-2">
                       <WishlistButton productId={product.id} />
                     </div>
+                    {outOfStock && (
+                      <span className="absolute left-2 top-2 rounded-full bg-gray-900/80 px-2 py-0.5 text-[11px] font-medium text-white">
+                        Hết hàng
+                      </span>
+                    )}
                     <div className="bg-gray-100 rounded-lg h-36 flex items-center justify-center mb-3 overflow-hidden">
                       {product.imageUrl ? (
                         <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-contain" />
@@ -237,16 +296,32 @@ export default function ProductListPage() {
                       {product.originalPrice > product.price && (
                         <p className="text-gray-400 text-xs line-through">{formatPrice(product.originalPrice)}</p>
                       )}
+                      {selectedStore && (
+                        <p className={`mt-1 text-xs ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>
+                          {stockLoading && stock === undefined
+                            ? 'Đang kiểm tra tồn kho...'
+                            : outOfStock
+                            ? 'Hết hàng tại chi nhánh'
+                            : `Còn ${stock ?? 0} sản phẩm`}
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={(e) => handleQuickAdd(e, product)}
-                      disabled={addingId === product.id}
+                      disabled={quickAddDisabled}
                       className="mt-2 w-full text-xs bg-rose-600 text-white rounded-lg py-1.5 hover:bg-rose-700 disabled:opacity-50 transition-colors"
                     >
-                      {addingId === product.id ? 'Đang thêm...' : '+ Thêm món'}
+                      {addingId === product.id
+                        ? 'Đang thêm...'
+                        : outOfStock
+                        ? 'Hết hàng'
+                        : product.hasSizes
+                        ? 'Chọn size'
+                        : '+ Thêm món'}
                     </button>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Pagination */}

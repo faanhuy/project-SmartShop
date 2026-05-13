@@ -1,6 +1,13 @@
 import api from './api';
 import type { ApiResponse } from '../types/auth';
-import type { Store, StoreInventory, StockInfo, CreateStoreRequest, UpdateStoreRequest } from '../types/store';
+import type {
+  Store,
+  StoreInventory,
+  StockInfo,
+  SizeStockInfo,
+  CreateStoreRequest,
+  UpdateStoreRequest,
+} from '../types/store';
 
 export const storeService = {
   getStores: async (): Promise<Store[]> => {
@@ -18,6 +25,13 @@ export const storeService = {
       `/stores/${storeId}/products/${productId}/stock`,
     );
     return data.data!;
+  },
+
+  getProductSizeStock: async (storeId: string, productId: string): Promise<SizeStockInfo[]> => {
+    const { data } = await api.get<ApiResponse<SizeStockInfo[]>>(
+      `/stores/${storeId}/products/${productId}/sizes/stock`,
+    );
+    return data.data ?? [];
   },
 
   // Admin endpoints
@@ -42,6 +56,19 @@ export const storeService = {
   ): Promise<StoreInventory> => {
     const { data } = await api.patch<ApiResponse<StoreInventory>>(
       `/admin/stores/${storeId}/inventory/${productId}`,
+      { quantity },
+    );
+    return data.data!;
+  },
+
+  updateSizeInventory: async (
+    storeId: string,
+    productId: string,
+    sizeId: string,
+    quantity: number,
+  ): Promise<{ quantity: number }> => {
+    const { data } = await api.put<ApiResponse<{ quantity: number }>>(
+      `/admin/stores/${storeId}/inventory/${productId}/sizes/${sizeId}`,
       { quantity },
     );
     return data.data!;

@@ -23,25 +23,29 @@ public class Cart : BaseAuditableEntity
         };
     }
 
-    public void AddItem(Guid productId, int quantity, decimal unitPrice)
+    public void AddItem(Guid productId, int quantity, decimal unitPrice,
+        Guid? sizeId = null, string? sizeLabel = null)
     {
-        var existing = _items.FirstOrDefault(i => i.ProductId == productId);
+        var existing = _items.FirstOrDefault(i =>
+            i.ProductId == productId && i.SizeId == sizeId);
         if (existing != null)
             existing.IncreaseQuantity(quantity);
         else
-            _items.Add(CartItem.Create(Id, productId, quantity, unitPrice));
+            _items.Add(CartItem.Create(Id, productId, quantity, unitPrice, sizeId, sizeLabel));
     }
 
-    public void RemoveItem(Guid productId)
+    public void RemoveItem(Guid productId, Guid? sizeId = null)
     {
-        var item = _items.FirstOrDefault(i => i.ProductId == productId);
+        var item = _items.FirstOrDefault(i =>
+            i.ProductId == productId && i.SizeId == sizeId);
         if (item != null)
             _items.Remove(item);
     }
 
-    public void UpdateItemQuantity(Guid productId, int quantity)
+    public void UpdateItemQuantity(Guid productId, int quantity, Guid? sizeId = null)
     {
-        var item = _items.FirstOrDefault(i => i.ProductId == productId)
+        var item = _items.FirstOrDefault(i =>
+                i.ProductId == productId && i.SizeId == sizeId)
             ?? throw new InvalidOperationException("Sản phẩm không có trong giỏ hàng.");
         item.UpdateQuantity(quantity);
     }

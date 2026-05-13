@@ -91,10 +91,10 @@ export default function CartPage() {
     loadCart().then((data) => loadSuggestions(data));
   }, []);
 
-  const handleUpdateQuantity = async (productId: string, quantity: number) => {
-    if (quantity <= 0) return handleRemove(productId);
+  const handleUpdateQuantity = async (productId: string, quantity: number, sizeId?: string | null) => {
+    if (quantity <= 0) return handleRemove(productId, sizeId);
     try {
-      const updated = await cartService.updateItem(productId, quantity);
+      const updated = await cartService.updateItem(productId, quantity, sizeId ?? undefined);
       setCart(updated);
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
     } catch (err) {
@@ -102,9 +102,9 @@ export default function CartPage() {
     }
   };
 
-  const handleRemove = async (productId: string) => {
+  const handleRemove = async (productId: string, sizeId?: string | null) => {
     try {
-      const updated = await cartService.removeItem(productId);
+      const updated = await cartService.removeItem(productId, sizeId ?? undefined);
       setCart(updated);
       if (appliedCode) await revalidateCoupon(updated, appliedCode);
     } catch {
@@ -198,7 +198,7 @@ export default function CartPage() {
               {/* Món trong giỏ */}
               <div id="cart-items" className="space-y-4 mb-4 w-full">
                 {cart.items.map((item) => (
-                  <div key={item.productId} className="flex gap-4 border rounded-lg p-4 items-start bg-white" id={`cart-item-${item.productId}`}>
+                  <div key={`${item.productId}-${item.sizeId ?? ''}`} className="flex gap-4 border rounded-lg p-4 items-start bg-white" id={`cart-item-${item.productId}`}>
                     <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
                       {item.productImageUrl ? (
                         <img src={getImageUrl(item.productImageUrl)} alt={item.productName} className="w-full h-full object-cover" />
@@ -208,20 +208,28 @@ export default function CartPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-base mb-1">{item.productName}</div>
-                      <div className="text-gray-500 text-sm mb-1">Chuẩn bị nóng hổi tại bếp FastFood và giao nhanh đến địa chỉ của bạn.</div>
+                      {item.sizeLabel && (
+                        <div className="text-xs text-gray-500 mb-1">
+                          Size: <span className="font-medium text-gray-700">{item.sizeLabel}</span>
+                        </div>
+                      )}
                       <div className="flex gap-2 text-amber-600 font-bold items-center mb-1">
-                        <span className="line-through text-gray-400 font-normal mr-2">{item.unitPrice.toLocaleString('vi-VN')} đ</span>
-                        <span className="text-xl ml-2">{item.subTotal.toLocaleString('vi-VN')} đ</span>
+                        {item.originalUnitPrice != null && item.originalUnitPrice > item.unitPrice && (
+                          <span className="line-through text-gray-400 font-normal mr-1 text-sm">
+                            {(item.originalUnitPrice * item.quantity).toLocaleString('vi-VN')} đ
+                          </span>
+                        )}
+                        <span className="text-xl">{item.subTotal.toLocaleString('vi-VN')} đ</span>
                       </div>
                       <div className="flex gap-4 text-sm mt-1">
-                        <button className="text-amber-600 hover:underline" onClick={() => handleRemove(item.productId)}>Gỡ món</button>
+                        <button className="text-amber-600 hover:underline" onClick={() => handleRemove(item.productId, item.sizeId)}>Gỡ món</button>
                       </div>
                     </div>
                     <div className="flex flex-col items-center gap-2">
                       <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
-                        <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200" onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}><FiMinus size={14} /></button>
+                        <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200" onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.sizeId)}><FiMinus size={14} /></button>
                         <span className="w-6 text-center">{item.quantity}</span>
-                        <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200" onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}><FiPlus size={14} /></button>
+                        <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200" onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.sizeId)}><FiPlus size={14} /></button>
                       </div>
                     </div>
                   </div>

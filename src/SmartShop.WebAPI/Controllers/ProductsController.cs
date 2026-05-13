@@ -32,10 +32,10 @@ public class ProductsController(IMediator mediator) : ControllerBase
 
     /// <summary>Lấy chi tiết một sản phẩm theo Id</summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ApiResponse<ProductDto>>> GetById(Guid id, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ProductDetailDto>>> GetById(Guid id, CancellationToken ct)
     {
         var result = await mediator.Send(new GetProductByIdQuery(id), ct);
-        return Ok(ApiResponse<ProductDto>.Ok(result));
+        return Ok(ApiResponse<ProductDetailDto>.Ok(result));
     }
 
     /// <summary>Lấy chi tiết một sản phẩm theo Slug</summary>
@@ -60,7 +60,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ApiResponse<ProductDto>>> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageUrl, request.OriginalPrice), ct);
+        var result = await mediator.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageUrl, request.OriginalPrice, request.HasSizes, request.SizeType), ct);
         return Ok(ApiResponse<ProductDto>.Ok(result));
     }
 
@@ -74,4 +74,12 @@ public class ProductsController(IMediator mediator) : ControllerBase
     }
 }
 
-public record UpdateProductRequest(string Name, string Description, decimal Price, string? ImageUrl, decimal? OriginalPrice = null);
+public record UpdateProductRequest(
+    string Name,
+    string Description,
+    decimal Price,
+    string? ImageUrl,
+    decimal? OriginalPrice = null,
+    bool HasSizes = false,
+    SmartShop.Domain.Enums.SizeType? SizeType = null
+);

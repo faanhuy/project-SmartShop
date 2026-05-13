@@ -8,18 +8,27 @@ export const cartService = {
     return data.data;
   },
 
-  addToCart: async (productId: string, quantity: number): Promise<CartDto> => {
-    const { data } = await api.post<ApiResponse<CartDto>>('/cart/items', { productId, quantity });
+  addToCart: async (productId: string, quantity: number, sizeId?: string): Promise<CartDto> => {
+    const { data } = await api.post<ApiResponse<CartDto>>('/cart/items', {
+      productId,
+      quantity,
+      ...(sizeId ? { sizeId } : {}),
+    });
     return data.data;
   },
 
-  updateItem: async (productId: string, quantity: number): Promise<CartDto> => {
-    const { data } = await api.put<ApiResponse<CartDto>>(`/cart/items/${productId}`, { quantity });
+  updateItem: async (productId: string, quantity: number, sizeId?: string): Promise<CartDto> => {
+    const { data } = await api.put<ApiResponse<CartDto>>(`/cart/items/${productId}`, {
+      quantity,
+      ...(sizeId ? { sizeId } : {}),
+    });
     return data.data;
   },
 
-  removeItem: async (productId: string): Promise<CartDto> => {
-    const { data } = await api.delete<ApiResponse<CartDto>>(`/cart/items/${productId}`);
+  removeItem: async (productId: string, sizeId?: string): Promise<CartDto> => {
+    const { data } = await api.delete<ApiResponse<CartDto>>(`/cart/items/${productId}`, {
+      params: sizeId ? { sizeId } : undefined,
+    });
     return data.data;
   },
 

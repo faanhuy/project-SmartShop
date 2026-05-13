@@ -31,7 +31,9 @@ public class CreateProductCommandHandler(
             request.CategoryId,
             request.Slug,
             request.ImageUrl,
-            request.OriginalPrice
+            request.OriginalPrice,
+            request.HasSizes,
+            request.SizeType
         );
 
         await repository.AddAsync(product, cancellationToken);
@@ -41,6 +43,7 @@ public class CreateProductCommandHandler(
 
         return new ProductDto(
             product.Id, product.Name, product.Description, product.Price, product.OriginalPrice,
-            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt);
+            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt,
+            product.HasSizes, product.SizeType?.ToString());
     }
 }

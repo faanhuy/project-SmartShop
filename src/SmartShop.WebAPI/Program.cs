@@ -25,6 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "FastFood API", Version = "v1" });
+    c.CustomSchemaIds(GetSwaggerSchemaId);
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -140,3 +141,18 @@ app.MapControllers();
 app.MapHub<OrderStatusHub>("/hubs/orders");
 
 app.Run();
+
+static string GetSwaggerSchemaId(Type type)
+{
+    if (!type.IsGenericType)
+    {
+        return (type.FullName ?? type.Name).Replace("+", ".");
+    }
+
+    var genericTypeName = type.GetGenericTypeDefinition().FullName
+        ?? type.GetGenericTypeDefinition().Name;
+    genericTypeName = genericTypeName.Split('`')[0].Replace("+", ".");
+
+    var genericArgumentNames = string.Join("And", type.GetGenericArguments().Select(GetSwaggerSchemaId));
+    return $"{genericTypeName}Of{genericArgumentNames}";
+}

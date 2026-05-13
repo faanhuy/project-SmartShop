@@ -395,7 +395,7 @@ export default function CheckoutPage() {
                 <>
                   <div className="space-y-3 mb-4 max-h-64 overflow-y-auto pr-1">
                     {cart.items.map((item) => (
-                      <div key={item.productId} className="flex items-center gap-3">
+                      <div key={`${item.productId}-${item.sizeId ?? ''}`} className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg shrink-0 overflow-hidden">
                           {item.productImageUrl ? (
                             <img src={getImageUrl(item.productImageUrl)} alt={item.productName} className="w-full h-full object-cover" />
@@ -405,7 +405,9 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{item.productName}</p>
-                          <p className="text-xs text-gray-500">x{item.quantity} phần</p>
+                          <p className="text-xs text-gray-500">
+                            x{item.quantity} phần{item.sizeLabel ? ` · ${item.sizeLabel}` : ''}
+                          </p>
                         </div>
                         <p className="text-sm font-semibold text-rose-600 shrink-0">
                           {formatPrice(item.subTotal)}

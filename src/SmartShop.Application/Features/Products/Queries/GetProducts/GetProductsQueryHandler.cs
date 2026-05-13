@@ -33,7 +33,8 @@ public class GetProductsQueryHandler(
 
         var dtos = items.Select(p => new ProductDto(
             p.Id, p.Name, p.Description, p.Price, p.OriginalPrice,
-            p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt));
+            p.Slug, p.ImageUrl, p.IsActive, p.CategoryId, p.CreatedAt,
+            p.HasSizes, p.SizeType?.ToString()));
 
         var result = new PagedResult<ProductDto>(dtos, totalCount, request.Page, request.PageSize);
 

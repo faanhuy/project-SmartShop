@@ -8,6 +8,8 @@ public class CartItemDto
     public int Quantity { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal SubTotal { get; init; }
+    public Guid? SizeId { get; init; }
+    public string? SizeLabel { get; init; }
 }
 
 public class CartDto

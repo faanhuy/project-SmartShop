@@ -8,6 +8,8 @@ public class CartItem : BaseEntity
     public Guid ProductId { get; private set; }
     public int Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
+    public Guid? SizeId { get; private set; }
+    public string? SizeLabel { get; private set; }
 
     public Cart? Cart { get; private set; }
     public Product? Product { get; private set; }
@@ -16,14 +18,18 @@ public class CartItem : BaseEntity
 
     private CartItem() { }
 
-    public static CartItem Create(Guid cartId, Guid productId, int quantity, decimal unitPrice)
+    public static CartItem Create(
+        Guid cartId, Guid productId, int quantity, decimal unitPrice,
+        Guid? sizeId = null, string? sizeLabel = null)
     {
         return new CartItem
         {
             CartId = cartId,
             ProductId = productId,
             Quantity = quantity,
-            UnitPrice = unitPrice
+            UnitPrice = unitPrice,
+            SizeId = sizeId,
+            SizeLabel = sizeLabel
         };
     }
 

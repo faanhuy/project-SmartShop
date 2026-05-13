@@ -96,6 +96,13 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizeLabel")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -226,6 +233,76 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ChatSessions");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.ComboPromotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("RewardAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("RewardProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("RewardQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("RewardSizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RewardType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TriggerMinQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<Guid>("TriggerProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TriggerSizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "StartsAt", "EndsAt");
+
+                    b.ToTable("ComboPromotions", (string)null);
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Coupon", b =>
@@ -418,6 +495,14 @@ namespace SmartShop.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("ComboDiscountAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid?>("ComboPromotionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("CouponCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -507,6 +592,10 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("OriginalUnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
@@ -515,8 +604,18 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<Guid?>("PromotionalPriceId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizeLabel")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
@@ -529,6 +628,88 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaign", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AppliesToAll")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartsAt");
+
+                    b.HasIndex("EndsAt", "IsActive");
+
+                    b.ToTable("PriceLists", (string)null);
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaignItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RuleType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId", "ProductId")
+                        .IsUnique()
+                        .HasFilter("[SizeId] IS NULL");
+
+                    b.HasIndex("CampaignId", "ProductId", "SizeId")
+                        .IsUnique()
+                        .HasFilter("[SizeId] IS NOT NULL");
+
+                    b.ToTable("PriceCampaignItems", (string)null);
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Product", b =>
@@ -551,6 +732,11 @@ namespace SmartShop.Infrastructure.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<bool>("HasSizes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -572,6 +758,10 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SizeType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -616,6 +806,51 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ProductEmbeddings");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.ProductSize", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SizeLabel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SizeId");
+
+                    b.HasIndex("ProductId", "SizeLabel")
+                        .IsUnique();
+
+                    b.ToTable("ProductSizes");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Province", b =>
@@ -682,6 +917,137 @@ namespace SmartShop.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.Size", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category", "Label")
+                        .IsUnique();
+
+                    b.ToTable("Sizes", (string)null);
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StockReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ReceiptDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReceiptNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiptNumber")
+                        .IsUnique();
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("StockReceipts", (string)null);
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StockReceiptItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StockReceiptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SizeId");
+
+                    b.HasIndex("StockReceiptId");
+
+                    b.ToTable("StockReceiptItems", (string)null);
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Store", b =>
@@ -788,6 +1154,60 @@ namespace SmartShop.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("StoreInventories", (string)null);
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StoreSizeInventory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LowStockThreshold")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SizeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SizeId");
+
+                    b.HasIndex("StoreId", "ProductId", "SizeId")
+                        .IsUnique();
+
+                    b.ToTable("StoreSizeInventories");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.User", b =>
@@ -990,6 +1410,19 @@ namespace SmartShop.Infrastructure.Migrations
                     b.ToTable("WishlistItems");
                 });
 
+            modelBuilder.Entity("SmartShop.Infrastructure.Persistence.Configurations.PriceListStoreRow", b =>
+                {
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CampaignId", "StoreId");
+
+                    b.ToTable("PriceListStores", (string)null);
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Cart", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.User", "User")
@@ -1105,6 +1538,15 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaignItem", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.PriceCampaign", null)
+                        .WithMany("ItemsNav")
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Product", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.Category", "Category")
@@ -1127,6 +1569,24 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.ProductSize", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Product", "Product")
+                        .WithMany("Sizes")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Size", "Size")
+                        .WithMany()
+                        .HasForeignKey("SizeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Size");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Review", b =>
                 {
                     b.HasOne("SmartShop.Domain.Entities.Product", "Product")
@@ -1144,6 +1604,43 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StockReceipt", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StockReceiptItem", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Size", "Size")
+                        .WithMany()
+                        .HasForeignKey("SizeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SmartShop.Domain.Entities.StockReceipt", "StockReceipt")
+                        .WithMany("Items")
+                        .HasForeignKey("StockReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Size");
+
+                    b.Navigation("StockReceipt");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Store", b =>
@@ -1180,6 +1677,27 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StoreSizeInventory", b =>
+                {
+                    b.HasOne("SmartShop.Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.ProductSize", null)
+                        .WithMany()
+                        .HasForeignKey("SizeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartShop.Domain.Entities.Store", null)
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.UserAddress", b =>
@@ -1246,14 +1764,26 @@ namespace SmartShop.Infrastructure.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("SmartShop.Domain.Entities.PriceCampaign", b =>
+                {
+                    b.Navigation("ItemsNav");
+                });
+
             modelBuilder.Entity("SmartShop.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Reviews");
+
+                    b.Navigation("Sizes");
                 });
 
             modelBuilder.Entity("SmartShop.Domain.Entities.Province", b =>
                 {
                     b.Navigation("Wards");
+                });
+
+            modelBuilder.Entity("SmartShop.Domain.Entities.StockReceipt", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

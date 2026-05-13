@@ -52,8 +52,15 @@ public static class DependencyInjection
         services.AddScoped<IPaymentGateway, VNPayGateway>();
         services.AddScoped<IStoreRepository, StoreRepository>();
         services.AddScoped<IStoreInventoryRepository, StoreInventoryRepository>();
+        services.AddScoped<IProductSizeRepository, ProductSizeRepository>();
+        services.AddScoped<IStoreSizeInventoryRepository, StoreSizeInventoryRepository>();
         services.AddScoped<IProvinceRepository, ProvinceRepository>();
         services.AddScoped<IWardRepository, WardRepository>();
+        services.AddScoped<IPriceCampaignRepository, PriceCampaignRepository>();
+        services.AddScoped<IComboPromotionRepository, ComboPromotionRepository>();
+        services.AddScoped<SmartShop.Application.Services.IComboPromotionService, ComboPromotionService>();
+        services.AddScoped<ISizeRepository, SizeRepository>();
+        services.AddScoped<IStockReceiptRepository, StockReceiptRepository>();
 
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();
         services.AddScoped<IDataSeeder, AdminUserSeeder>();

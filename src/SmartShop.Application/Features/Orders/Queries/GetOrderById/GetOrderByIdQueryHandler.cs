@@ -40,7 +40,10 @@ public class GetOrderByIdQueryHandler(IOrderRepository orderRepository)
                 ProductImageUrl = i.Product?.ImageUrl,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
+                SubTotal = i.SubTotal,
+                SizeId = i.SizeId,
+                SizeLabel = i.SizeLabel,
+                OriginalUnitPrice = i.OriginalUnitPrice
             }).ToList(),
             CreatedAt = order.CreatedAt
         };

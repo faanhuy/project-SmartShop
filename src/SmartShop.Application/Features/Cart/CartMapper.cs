@@ -17,7 +17,9 @@ internal static class CartMapper
                 ProductImageUrl = i.Product?.ImageUrl,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
+                SubTotal = i.SubTotal,
+                SizeId = i.SizeId,
+                SizeLabel = i.SizeLabel
             }).ToList(),
             TotalAmount = cart.TotalAmount
         };

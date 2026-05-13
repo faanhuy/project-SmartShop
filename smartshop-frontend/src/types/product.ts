@@ -9,6 +9,18 @@ export interface ProductDto {
   isActive: boolean;
   categoryId: string;
   createdAt: string;
+  hasSizes: boolean;
+  /**
+   * SizeType enum values:
+   * - "DrinkSize" (0): Đồ uống
+   * - "FoodPortion" (1): Khẩu phần ăn
+   * - "MealSize" (2): Suất ăn / Combo
+   * - "Custom" (3): Tùy chỉnh
+   */
+  sizeType: string | null;
+  effectivePrice: number | null;
+  promotionCoefficient: number | null;
+  promotionEndsAt: string | null;
 }
 
 export interface CategoryDto {
@@ -35,6 +47,8 @@ export interface CreateProductRequest {
   categoryId: string;
   slug: string;
   imageUrl?: string | null;
+  hasSizes?: boolean;
+  sizeType?: string | null;
 }
 
 export interface UpdateProductRequest {
@@ -43,4 +57,6 @@ export interface UpdateProductRequest {
   price: number;
   originalPrice?: number | null;
   imageUrl: string | null;
+  hasSizes?: boolean;
+  sizeType?: string | null;
 }

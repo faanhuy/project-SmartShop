@@ -1,5 +1,6 @@
 using MediatR;
 using SmartShop.Application.Interfaces;
+using SmartShop.Application.Services;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
@@ -14,10 +15,13 @@ public class PlaceOrderCommandHandler(
     IProductRepository productRepository,
     IStoreRepository storeRepository,
     IStoreInventoryRepository storeInventoryRepository,
+    IStoreSizeInventoryRepository storeSizeInventoryRepository,
     ICouponRepository couponRepository,
     ICouponUsageRepository couponUsageRepository,
     IUserRepository userRepository,
     IUserAddressRepository userAddressRepository,
+    IPriceCampaignRepository priceCampaignRepository,
+    IComboPromotionService comboPromotionService,
     IUnitOfWork unitOfWork,
     IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
@@ -37,7 +41,6 @@ public class PlaceOrderCommandHandler(
             throw new ConflictException("Chi nhánh đã tạm ngừng hoạt động.");
 
         // Validate product IsActive, load products
-        var productIds = cart.Items.Select(i => i.ProductId).ToList();
         var products = new Dictionary<Guid, Product>();
         foreach (var item in cart.Items)
         {
@@ -50,13 +53,27 @@ public class PlaceOrderCommandHandler(
             products[item.ProductId] = product;
         }
 
-        // Load tất cả StoreInventory trong 1 query
-        var inventories = (await storeInventoryRepository.GetByStoreAndProductsAsync(
-            request.StoreId, productIds, cancellationToken))
-            .ToDictionary(i => i.ProductId);
+        // Separate items into sized vs non-sized
+        var sizedItems = cart.Items.Where(i => i.SizeId.HasValue).ToList();
+
+        // Load StoreInventory as product total stock for both sized and non-sized items
+        var inventoryProductIds = cart.Items.Select(i => i.ProductId).Distinct().ToList();
+        var inventories = inventoryProductIds.Count > 0
+            ? (await storeInventoryRepository.GetByStoreAndProductsAsync(
+                request.StoreId, inventoryProductIds, cancellationToken))
+                .ToDictionary(i => i.ProductId)
+            : new Dictionary<Guid, StoreInventory>();
+
+        // Load StoreSizeInventory for sized items
+        var sizeIds = sizedItems.Select(i => i.SizeId!.Value).ToList();
+        var sizeInventories = sizedItems.Count > 0
+            ? (await storeSizeInventoryRepository.GetByStoreAndSizesAsync(
+                request.StoreId, sizeIds, cancellationToken))
+                .ToDictionary(i => i.SizeId)
+            : new Dictionary<Guid, StoreSizeInventory>();
 
         // Phase 1 — Validate stock (read-only)
-        ValidateStock(cart.Items, products, inventories);
+        ValidateStock(cart.Items, products, inventories, sizeInventories);
 
         // Load address và build shipping info
         var address = await userAddressRepository.GetByIdAsync(request.AddressId, cancellationToken)
@@ -86,15 +103,43 @@ public class PlaceOrderCommandHandler(
         order.SetStoreId(request.StoreId);
         order.SetPaymentMethod(request.PaymentMethod);
 
+        // Load effective prices for all cart items at this store
+        var priceKeys = cart.Items.Select(i => (i.ProductId, i.SizeId)).ToList();
+        var effectivePriceRules = await priceCampaignRepository.GetEffectivePriceItemsAsync(
+            request.StoreId, priceKeys, DateTime.UtcNow, cancellationToken);
+
         foreach (var item in cart.Items)
         {
             var product = products[item.ProductId];
-            var orderItem = OrderItem.Create(order.Id, item.ProductId, product.Name, item.Quantity, item.UnitPrice);
+            var basePrice = product.Price;
+            var key = (item.ProductId, item.SizeId);
+
+            decimal unitPrice = basePrice;
+            decimal? originalUnitPrice = null;
+
+            if (effectivePriceRules.TryGetValue(key, out var rule))
+            {
+                var promoPrice = (PriceRuleType)rule.ruleType switch
+                {
+                    PriceRuleType.Coefficient => basePrice * rule.discountValue,
+                    PriceRuleType.FixedPrice => rule.discountValue,
+                    _ => basePrice
+                };
+
+                unitPrice = promoPrice;
+                originalUnitPrice = basePrice;
+            }
+
+            var orderItem = OrderItem.Create(
+                order.Id, item.ProductId, product.Name, item.Quantity, unitPrice,
+                sizeId: item.SizeId,
+                sizeLabel: item.SizeLabel,
+                originalUnitPrice: originalUnitPrice ?? basePrice);
             order.AddItem(orderItem);
         }
 
-        // Phase 2 — Deduct stock (sort by ProductId để tránh deadlock)
-        DeductStock(cart.Items, inventories);
+        // Phase 2 — Deduct stock (sort by key để tránh deadlock)
+        DeductStock(cart.Items, inventories, sizeInventories);
 
         if (!string.IsNullOrEmpty(request.CouponCode))
         {
@@ -123,6 +168,89 @@ public class PlaceOrderCommandHandler(
             couponRepository.Update(coupon);
         }
 
+        // Combo check — only when no coupon applied (no stacking)
+        if (request.ApplyCombo && string.IsNullOrEmpty(request.CouponCode))
+        {
+            var cartInputs = cart.Items.Select(i => new CartItemInput(i.ProductId, i.SizeId, i.Quantity));
+            var comboMatch = await comboPromotionService.FindApplicableComboAsync(
+                request.StoreId, cartInputs, cancellationToken);
+
+            if (comboMatch is not null)
+            {
+                if (comboMatch.RewardType == ComboRewardType.FreeProduct &&
+                    comboMatch.FreeProductId.HasValue && comboMatch.FreeQuantity > 0)
+                {
+                    var rewardProduct = await productRepository.GetByIdAsync(comboMatch.FreeProductId.Value, cancellationToken)
+                        ?? throw new NotFoundException(nameof(Product), comboMatch.FreeProductId.Value);
+
+                    // Deduct reward product inventory
+                    if (comboMatch.FreeSizeId.HasValue)
+                    {
+                        if (!sizeInventories.TryGetValue(comboMatch.FreeSizeId.Value, out var rewardSizeInv))
+                        {
+                            // Load fresh if not already loaded
+                            var freshSizeInvList = await storeSizeInventoryRepository
+                                .GetByStoreAndSizesAsync(request.StoreId, [comboMatch.FreeSizeId.Value], cancellationToken);
+                            rewardSizeInv = freshSizeInvList.FirstOrDefault()
+                                ?? throw new NotFoundException("Reward product out of stock", comboMatch.FreeSizeId.Value);
+                            sizeInventories[comboMatch.FreeSizeId.Value] = rewardSizeInv;
+                        }
+
+                        if (rewardSizeInv.Quantity < comboMatch.FreeQuantity)
+                            throw new ConflictException("Sản phẩm tặng kèm đã hết hàng.");
+
+                        rewardSizeInv.DeductStock(comboMatch.FreeQuantity);
+
+                        if (!inventories.TryGetValue(comboMatch.FreeProductId.Value, out var rewardTotalInv))
+                        {
+                            var freshInvList = await storeInventoryRepository
+                                .GetByStoreAndProductsAsync(request.StoreId, [comboMatch.FreeProductId.Value], cancellationToken);
+                            rewardTotalInv = freshInvList.FirstOrDefault()
+                                ?? throw new ConflictException("Sản phẩm tặng kèm chưa có tồn tổng tại chi nhánh này.");
+                            inventories[comboMatch.FreeProductId.Value] = rewardTotalInv;
+                        }
+
+                        if (rewardTotalInv.Quantity < comboMatch.FreeQuantity)
+                            throw new ConflictException("Sản phẩm tặng kèm đã hết hàng.");
+
+                        rewardTotalInv.DeductStock(comboMatch.FreeQuantity);
+                    }
+                    else
+                    {
+                        if (!inventories.TryGetValue(comboMatch.FreeProductId.Value, out var rewardInv))
+                        {
+                            var freshInvList = await storeInventoryRepository
+                                .GetByStoreAndProductsAsync(request.StoreId, [comboMatch.FreeProductId.Value], cancellationToken);
+                            rewardInv = freshInvList.FirstOrDefault()
+                                ?? throw new NotFoundException("Reward product out of stock", comboMatch.FreeProductId.Value);
+                            inventories[comboMatch.FreeProductId.Value] = rewardInv;
+                        }
+
+                        if (rewardInv.Quantity < comboMatch.FreeQuantity)
+                            throw new ConflictException("Sản phẩm tặng kèm đã hết hàng.");
+
+                        rewardInv.DeductStock(comboMatch.FreeQuantity);
+                    }
+
+                    // Add free OrderItem with price = 0
+                    var freeItem = OrderItem.Create(
+                        order.Id,
+                        rewardProduct.Id,
+                        rewardProduct.Name,
+                        comboMatch.FreeQuantity,
+                        unitPrice: 0m,
+                        sizeId: comboMatch.FreeSizeId,
+                        sizeLabel: null,
+                        originalUnitPrice: rewardProduct.Price);
+                    order.AddItem(freeItem);
+                }
+                else if (comboMatch.RewardType == ComboRewardType.DiscountAmount && comboMatch.DiscountAmount > 0)
+                {
+                    order.ApplyComboDiscount(comboMatch.Combo.Id, comboMatch.DiscountAmount);
+                }
+            }
+        }
+
         await orderRepository.AddAsync(order, cancellationToken);
 
         cart.Clear();
@@ -134,12 +262,20 @@ public class PlaceOrderCommandHandler(
         catch (ConcurrencyException)
         {
             // Retry once: reload fresh inventories → validate → deduct → save
-            var freshInventories = (await storeInventoryRepository.GetByStoreAndProductsAsync(
-                request.StoreId, productIds, cancellationToken))
-                .ToDictionary(i => i.ProductId);
+            var freshInventories = inventoryProductIds.Count > 0
+                ? (await storeInventoryRepository.GetByStoreAndProductsAsync(
+                    request.StoreId, inventoryProductIds, cancellationToken))
+                    .ToDictionary(i => i.ProductId)
+                : new Dictionary<Guid, StoreInventory>();
 
-            ValidateStock(cart.Items, products, freshInventories);
-            DeductStock(cart.Items, freshInventories);
+            var freshSizeInventories = sizedItems.Count > 0
+                ? (await storeSizeInventoryRepository.GetByStoreAndSizesAsync(
+                    request.StoreId, sizeIds, cancellationToken))
+                    .ToDictionary(i => i.SizeId)
+                : new Dictionary<Guid, StoreSizeInventory>();
+
+            ValidateStock(cart.Items, products, freshInventories, freshSizeInventories);
+            DeductStock(cart.Items, freshInventories, freshSizeInventories);
 
             try
             {
@@ -183,6 +319,8 @@ public class PlaceOrderCommandHandler(
             ShippingWardName = wardName,
             ShippingProvinceName = provinceName,
             CouponCode = order.CouponCode,
+            ComboPromotionId = order.ComboPromotionId,
+            ComboDiscountAmount = order.ComboDiscountAmount,
             Notes = order.Notes,
             PaymentMethod = order.PaymentMethod.ToString(),
             PaymentStatus = order.PaymentStatus.ToString(),
@@ -194,7 +332,10 @@ public class PlaceOrderCommandHandler(
                 ProductName = i.ProductName,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
+                SubTotal = i.SubTotal,
+                SizeId = i.SizeId,
+                SizeLabel = i.SizeLabel,
+                OriginalUnitPrice = i.OriginalUnitPrice
             }).ToList(),
             CreatedAt = order.CreatedAt
         };
@@ -203,28 +344,54 @@ public class PlaceOrderCommandHandler(
     private static void ValidateStock(
         IEnumerable<CartItem> items,
         Dictionary<Guid, Product> products,
-        Dictionary<Guid, StoreInventory> inventories)
+        Dictionary<Guid, StoreInventory> inventories,
+        Dictionary<Guid, StoreSizeInventory> sizeInventories)
     {
         foreach (var item in items)
         {
             var productName = products.TryGetValue(item.ProductId, out var p) ? p.Name : item.ProductId.ToString();
 
-            if (!inventories.TryGetValue(item.ProductId, out var inventory))
-                throw new ConflictException($"Sản phẩm '{productName}' không có trong kho chi nhánh này.");
+            if (item.SizeId.HasValue)
+            {
+                if (!sizeInventories.TryGetValue(item.SizeId.Value, out var sizeInv))
+                    throw new ConflictException(
+                        $"Sản phẩm '{productName}' size {item.SizeLabel} không có trong kho chi nhánh này.");
 
-            if (item.Quantity > inventory.Quantity)
-                throw new ConflictException(
-                    $"Sản phẩm '{productName}' chỉ còn {inventory.Quantity} trong kho.");
+                if (item.Quantity > sizeInv.Quantity)
+                    throw new ConflictException(
+                        $"Sản phẩm '{productName}' size {item.SizeLabel} chỉ còn {sizeInv.Quantity} trong kho.");
+            }
+            else
+            {
+                if (!inventories.TryGetValue(item.ProductId, out var inventory))
+                    throw new ConflictException($"Sản phẩm '{productName}' không có trong kho chi nhánh này.");
+
+                if (item.Quantity > inventory.Quantity)
+                    throw new ConflictException(
+                        $"Sản phẩm '{productName}' chỉ còn {inventory.Quantity} trong kho.");
+            }
         }
     }
 
     private static void DeductStock(
         IEnumerable<CartItem> items,
-        Dictionary<Guid, StoreInventory> inventories)
+        Dictionary<Guid, StoreInventory> inventories,
+        Dictionary<Guid, StoreSizeInventory> sizeInventories)
     {
-        foreach (var item in items.OrderBy(i => i.ProductId))
+        foreach (var item in items.OrderBy(i => i.SizeId.HasValue ? i.SizeId.ToString() : i.ProductId.ToString()))
         {
-            inventories[item.ProductId].DeductStock(item.Quantity);
+            if (item.SizeId.HasValue)
+            {
+                sizeInventories[item.SizeId.Value].DeductStock(item.Quantity);
+                if (!inventories.TryGetValue(item.ProductId, out var inventory))
+                    throw new ConflictException("Sản phẩm chưa có tồn tổng tại chi nhánh này.");
+
+                inventory.DeductStock(item.Quantity);
+            }
+            else
+            {
+                inventories[item.ProductId].DeductStock(item.Quantity);
+            }
         }
     }
 }

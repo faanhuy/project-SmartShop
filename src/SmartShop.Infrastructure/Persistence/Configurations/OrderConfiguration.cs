@@ -18,6 +18,13 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.TotalAmount)
             .HasPrecision(18, 2);
 
+        builder.Property(e => e.ComboDiscountAmount)
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValue(0m);
+
+        builder.Property(e => e.ComboPromotionId)
+            .IsRequired(false);
+
         builder.Property(e => e.ShippingAddress)
             .IsRequired()
             .HasMaxLength(500);

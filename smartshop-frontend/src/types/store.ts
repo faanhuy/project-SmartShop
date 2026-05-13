@@ -46,3 +46,10 @@ export interface StockInfo {
   storeId: string;
   quantity: number;
 }
+
+export interface SizeStockInfo {
+  productId: string;
+  storeId: string;
+  sizeId: string;
+  quantity: number;
+}

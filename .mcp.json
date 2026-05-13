@@ -2,14 +2,14 @@
   "mcpServers": {
     "smartshop": {
       "command": "node",
-      "args": ["D:/Courses/SmartShop/tools/mcp-server/dist/index.js"],
+      "args": ["D:\\Projects\\Personal\\SmartShop\\tools\\mcp-server\\dist\\index.js"],
       "env": {
         "DB_SERVER": "localhost",
         "DB_NAME": "SmartShop",
         "DB_TRUSTED": "true",
         "REDIS_URL": "redis://localhost:6379",
-        "MIGRATIONS_DIR": "D:/Courses/SmartShop/src/SmartShop.Infrastructure/Migrations",
-        "CONTROLLERS_DIR": "D:/Courses/SmartShop/src/SmartShop.WebAPI/Controllers"
+        "MIGRATIONS_DIR": "D:\\Projects\\Personal\\SmartShop\\src\\SmartShop.Infrastructure\\Migrations",
+        "CONTROLLERS_DIR": "D:\\Projects\\Personal\\SmartShop\\src\\SmartShop.WebAPI\\Controllers"
       }
     }
   }

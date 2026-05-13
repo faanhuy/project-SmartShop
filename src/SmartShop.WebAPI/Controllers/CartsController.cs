@@ -34,7 +34,7 @@ public class CartsController(IMediator mediator) : ControllerBase
         [FromBody] AddToCartRequest request, CancellationToken ct)
     {
         var result = await mediator.Send(
-            new AddToCartCommand(CurrentUserId, request.ProductId, request.Quantity), ct);
+            new AddToCartCommand(CurrentUserId, request.ProductId, request.Quantity, request.SizeId), ct);
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
@@ -44,15 +44,16 @@ public class CartsController(IMediator mediator) : ControllerBase
         Guid productId, [FromBody] UpdateQuantityRequest request, CancellationToken ct)
     {
         var result = await mediator.Send(
-            new UpdateCartItemCommand(CurrentUserId, productId, request.Quantity), ct);
+            new UpdateCartItemCommand(CurrentUserId, productId, request.Quantity, request.SizeId), ct);
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
     /// <summary>Xoá sản phẩm khỏi giỏ hàng</summary>
     [HttpDelete("items/{productId:guid}")]
-    public async Task<ActionResult<ApiResponse<CartDto>>> RemoveFromCart(Guid productId, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<CartDto>>> RemoveFromCart(
+        Guid productId, [FromQuery] Guid? sizeId, CancellationToken ct)
     {
-        var result = await mediator.Send(new RemoveFromCartCommand(CurrentUserId, productId), ct);
+        var result = await mediator.Send(new RemoveFromCartCommand(CurrentUserId, productId, sizeId), ct);
         return Ok(ApiResponse<CartDto>.Ok(result));
     }
 
@@ -65,5 +66,5 @@ public class CartsController(IMediator mediator) : ControllerBase
     }
 }
 
-public record AddToCartRequest(Guid ProductId, int Quantity);
-public record UpdateQuantityRequest(int Quantity);
+public record AddToCartRequest(Guid ProductId, int Quantity, Guid? SizeId = null);
+public record UpdateQuantityRequest(int Quantity, Guid? SizeId = null);

@@ -14,10 +14,11 @@ public class AddToCartCommandHandlerTests
 {
     private readonly Mock<ICartRepository> _cartRepo = new();
     private readonly Mock<IProductRepository> _productRepo = new();
+    private readonly Mock<IProductSizeRepository> _productSizeRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
 
     private AddToCartCommandHandler CreateHandler() =>
-        new(_cartRepo.Object, _productRepo.Object, _uow.Object);
+        new(_cartRepo.Object, _productRepo.Object, _productSizeRepo.Object, _uow.Object);
 
     [Fact]
     public async Task Handle_NewCart_CreatesCartAndAddsItem()

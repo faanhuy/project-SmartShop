@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartShop.Application.Common.Models;
+using SmartShop.Application.Features.Inventory.Commands.SetStoreSizeInventory;
 using SmartShop.Application.Features.Inventory.Commands.UpdateStoreInventory;
 using SmartShop.Application.Features.Inventory.Queries.GetLowStockProducts;
 using SmartShop.Application.Features.Inventory.Queries.GetStoreInventory;
@@ -14,7 +15,10 @@ using SmartShop.Domain.Interfaces;
 namespace SmartShop.WebAPI.Controllers;
 
 [ApiController]
-public class StoresController(IMediator mediator, IStoreInventoryRepository inventoryRepository) : ControllerBase
+public class StoresController(
+    IMediator mediator,
+    IStoreInventoryRepository inventoryRepository,
+    IStoreSizeInventoryRepository sizeInventoryRepository) : ControllerBase
 {
     // ── Public endpoints ──────────────────────────────────────────────────
 
@@ -44,6 +48,21 @@ public class StoresController(IMediator mediator, IStoreInventoryRepository inve
         var inventory = await inventoryRepository.GetByStoreAndProductAsync(storeId, productId, ct);
         var quantity = inventory?.Quantity ?? 0;
         return Ok(ApiResponse<StockDto>.Ok(new StockDto(productId, storeId, quantity)));
+    }
+
+    /// <summary>Tồn kho theo từng size của một sản phẩm tại chi nhánh</summary>
+    [HttpGet("api/stores/{storeId:guid}/products/{productId:guid}/sizes/stock")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<List<SizeStockDto>>>> GetSizeStock(
+        Guid storeId, Guid productId, CancellationToken ct)
+    {
+        var inventories = await sizeInventoryRepository.GetByProductIdAsync(productId, ct);
+        var result = inventories
+            .Where(i => i.StoreId == storeId)
+            .Select(i => new SizeStockDto(productId, storeId, i.SizeId, i.Quantity))
+            .ToList();
+
+        return Ok(ApiResponse<List<SizeStockDto>>.Ok(result));
     }
 
     // ── Admin endpoints ───────────────────────────────────────────────────
@@ -99,9 +118,22 @@ public class StoresController(IMediator mediator, IStoreInventoryRepository inve
         var result = await mediator.Send(new GetLowStockProductsQuery(storeId), ct);
         return Ok(result);
     }
+
+    /// <summary>Set tồn kho theo size tại chi nhánh (Admin only)</summary>
+    [HttpPut("api/admin/stores/{storeId:guid}/inventory/{productId:guid}/sizes/{sizeId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<bool>>> SetSizeInventory(
+        Guid storeId, Guid productId, Guid sizeId,
+        [FromBody] SetSizeInventoryRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new SetStoreSizeInventoryCommand(storeId, productId, sizeId, request.Quantity), ct);
+        return Ok(result);
+    }
 }
 
 public record StockDto(Guid ProductId, Guid StoreId, int Quantity);
+public record SizeStockDto(Guid ProductId, Guid StoreId, Guid SizeId, int Quantity);
 public record CreateStoreRequest(
     string Name,
     string Address,
@@ -119,3 +151,4 @@ public record UpdateStoreRequest(
     int? WardId = null,
     string? Street = null);
 public record UpdateInventoryRequest(int Quantity);
+public record SetSizeInventoryRequest(int Quantity);

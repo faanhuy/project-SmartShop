@@ -19,7 +19,7 @@ public class UpdateProductCommandHandler(
         var product = await repository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Product), request.Id);
 
-        product.Update(request.Name, request.Description, request.Price, request.ImageUrl, request.OriginalPrice);
+        product.Update(request.Name, request.Description, request.Price, request.ImageUrl, request.OriginalPrice, request.HasSizes, request.SizeType);
         repository.Update(product);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -29,6 +29,7 @@ public class UpdateProductCommandHandler(
 
         return new ProductDto(
             product.Id, product.Name, product.Description, product.Price, product.OriginalPrice,
-            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt);
+            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt,
+            product.HasSizes, product.SizeType?.ToString());
     }
 }

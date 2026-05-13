@@ -8,6 +8,9 @@ public class OrderItemDto
     public int Quantity { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal SubTotal { get; init; }
+    public Guid? SizeId { get; init; }
+    public string? SizeLabel { get; init; }
+    public decimal? OriginalUnitPrice { get; init; }
 }
 
 public class OrderDto
@@ -28,6 +31,8 @@ public class OrderDto
     public string? ShippingProvinceName { get; init; }
     public string? Notes { get; init; }
     public string? CouponCode { get; init; }
+    public Guid? ComboPromotionId { get; init; }
+    public decimal ComboDiscountAmount { get; init; }
     public string PaymentMethod { get; init; } = string.Empty;
     public string PaymentStatus { get; init; } = string.Empty;
     public DateTime? PaidAt { get; init; }

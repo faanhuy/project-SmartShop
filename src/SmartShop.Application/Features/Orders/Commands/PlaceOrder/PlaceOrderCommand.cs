@@ -9,5 +9,6 @@ public record PlaceOrderCommand(
     Guid AddressId,
     string? Notes,
     string? CouponCode,
-    PaymentMethod PaymentMethod = PaymentMethod.COD) : IRequest<OrderDto>;
+    PaymentMethod PaymentMethod = PaymentMethod.COD,
+    bool ApplyCombo = true) : IRequest<OrderDto>;
     

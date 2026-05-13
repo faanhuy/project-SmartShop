@@ -21,6 +21,9 @@ public class Order : BaseAuditableEntity
 
     public Guid? StoreId { get; private set; }
 
+    public Guid? ComboPromotionId { get; private set; }
+    public decimal ComboDiscountAmount { get; private set; }
+
     public Guid? ShippingAddressId { get; private set; }
     public string? ShippingStreet { get; private set; }
     public int? ShippingWardId { get; private set; }
@@ -104,6 +107,16 @@ public class Order : BaseAuditableEntity
         CouponCode = couponCode;
         DiscountAmount = discountAmount;
         TotalAmount = OriginalAmount - DiscountAmount;
+    }
+
+    public void ApplyComboDiscount(Guid comboId, decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Combo discount amount phải > 0.", nameof(amount));
+
+        ComboPromotionId = comboId;
+        ComboDiscountAmount = amount;
+        TotalAmount = Math.Max(0, TotalAmount - amount);
     }
 
     public void Cancel()

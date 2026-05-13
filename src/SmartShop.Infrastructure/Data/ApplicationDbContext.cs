@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartShop.Application.Common.Interfaces;
 using SmartShop.Domain.Common;
 using SmartShop.Domain.Entities;
+using SmartShop.Infrastructure.Persistence.Configurations;
 
 namespace SmartShop.Infrastructure.Data;
 
@@ -42,8 +43,17 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<Store> Stores { get; set; }
     public DbSet<StoreInventory> StoreInventories { get; set; }
+    public DbSet<ProductSize> ProductSizes { get; set; }
+    public DbSet<StoreSizeInventory> StoreSizeInventories { get; set; }
+    public DbSet<Size> Sizes { get; set; }
+    public DbSet<StockReceipt> StockReceipts { get; set; }
+    public DbSet<StockReceiptItem> StockReceiptItems { get; set; }
     public DbSet<Province> Provinces => Set<Province>();
     public DbSet<Ward> Wards => Set<Ward>();
+    public DbSet<PriceCampaign> PriceCampaigns { get; set; }
+    public DbSet<PriceCampaignItem> PriceCampaignItems { get; set; }
+    public DbSet<PriceListStoreRow> PriceListStores { get; set; }
+    public DbSet<ComboPromotion> ComboPromotions => Set<ComboPromotion>();
 
     private static readonly TimeZoneInfo _vnTz =
         TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");

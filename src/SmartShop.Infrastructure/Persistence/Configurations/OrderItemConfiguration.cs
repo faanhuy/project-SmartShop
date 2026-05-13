@@ -21,6 +21,12 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.Property(e => e.UnitPrice)
             .HasPrecision(18, 2);
 
+        builder.Property(e => e.SizeLabel)
+            .HasMaxLength(20);
+
+        builder.Property(e => e.OriginalUnitPrice)
+            .HasPrecision(18, 2);
+
         // SubTotal is a C# computed property (UnitPrice * Quantity) — not a DB column
         builder.Ignore(e => e.SubTotal);
 

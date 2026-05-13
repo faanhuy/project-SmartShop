@@ -24,7 +24,8 @@ public class GetProductBySlugQueryHandler(
 
         var dto = new ProductDto(
             product.Id, product.Name, product.Description, product.Price, product.OriginalPrice,
-            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt);
+            product.Slug, product.ImageUrl, product.IsActive, product.CategoryId, product.CreatedAt,
+            product.HasSizes, product.SizeType?.ToString());
 
         await cache.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(10), cancellationToken);
 

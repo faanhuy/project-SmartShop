@@ -36,6 +36,15 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(e => e.IsActive)
             .HasDefaultValue(true);
 
+        builder.Property(e => e.HasSizes)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(e => e.SizeType)
+            .HasMaxLength(50)
+            .HasConversion<string>()
+            .IsRequired(false);
+
         // 1:many Product → Reviews
         // Product has private backing field _reviews — EF finds it by naming convention
         builder.HasMany(e => e.Reviews)
