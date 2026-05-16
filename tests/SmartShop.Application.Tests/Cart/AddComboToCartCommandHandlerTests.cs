@@ -5,6 +5,7 @@ using SmartShop.Application.Features.Cart.Commands.AddComboToCart;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Application.Interfaces;
 using CartEntity = SmartShop.Domain.Entities.Cart;
 
 namespace SmartShop.Application.Tests.Cart;

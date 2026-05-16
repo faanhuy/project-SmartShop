@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FiArrowLeft } from 'react-icons/fi';
 import { comboService } from '../services/comboService';
@@ -14,7 +14,6 @@ import type { ComboDto } from '../types/promotion';
 
 export default function ComboDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user, refreshCartCount } = useAuthStore();
 
   const [combo, setCombo] = useState<ComboDto | null>(null);

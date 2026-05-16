@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SmartShop.Application.Common.Models;
+using SmartShop.Domain.Interfaces;
 using SmartShop.Infrastructure.Services;
 using Xunit;
 
@@ -20,9 +21,14 @@ public class LocalFileStorageServiceTests : IDisposable
         var mockEnv = new Mock<IWebHostEnvironment>();
         mockEnv.Setup(e => e.WebRootPath).Returns(_tempWebRoot);
 
+        var mockAppSettingRepo = new Mock<IAppSettingRepository>();
+        mockAppSettingRepo
+            .Setup(r => r.GetStringAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("");
+
         var mockLogger = new Mock<ILogger<LocalFileStorageService>>();
 
-        return (new LocalFileStorageService(mockEnv.Object, mockLogger.Object), _tempWebRoot);
+        return (new LocalFileStorageService(mockEnv.Object, mockAppSettingRepo.Object, mockLogger.Object), _tempWebRoot);
     }
 
     [Fact]
@@ -39,7 +45,7 @@ public class LocalFileStorageServiceTests : IDisposable
 
         // Assert
         url.Should().StartWith("/uploads/");
-        var expectedDir = Path.Combine(tempWebRoot, "uploads", "csv-imports");
+        var expectedDir = Path.Combine(tempWebRoot, "uploads", "imports");
         Directory.Exists(expectedDir).Should().BeTrue();
     }
 
@@ -106,7 +112,7 @@ public class LocalFileStorageServiceTests : IDisposable
     {
         // Arrange
         var (service, tempWebRoot) = CreateServiceWithTempDir();
-        var nonExistentUrl = "/uploads/csv-imports/nonexistent.csv";
+        var nonExistentUrl = "/uploads/imports/nonexistent.csv";
 
         // Act
         var act = () => service.DeleteAsync(nonExistentUrl, UploadCategory.CsvImport, default);
@@ -144,8 +150,8 @@ public class LocalFileStorageServiceTests : IDisposable
         var url2 = await service.UploadAsync(stream2, "file2.csv", UploadCategory.CsvImport, default);
 
         // Assert
-        url1.Should().StartWith("/uploads/csv-imports/");
-        url2.Should().StartWith("/uploads/csv-imports/");
+        url1.Should().StartWith("/uploads/imports/");
+        url2.Should().StartWith("/uploads/imports/");
     }
 
     [Fact]
@@ -177,7 +183,7 @@ public class LocalFileStorageServiceTests : IDisposable
         await service.UploadAsync(stream, "test.csv", UploadCategory.CsvImport, default);
 
         // Assert - Stream can still be read or is properly disposed
-        var csvDir = Path.Combine(tempWebRoot, "uploads", "csv-imports");
+        var csvDir = Path.Combine(tempWebRoot, "uploads", "imports");
         Directory.GetFiles(csvDir).Should().HaveCountGreaterThan(0);
     }
 

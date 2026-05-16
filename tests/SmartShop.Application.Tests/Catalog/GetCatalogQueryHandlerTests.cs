@@ -67,7 +67,7 @@ public class GetCatalogQueryHandlerTests
     {
         var combo = CreateTestCombo(salePrice: 99.99m);
         var product1 = CreateTestProduct("Product1");
-        product1.UpdatePrice(50m);
+        _ = product1; // price set at creation
         var comboItem = ComboItem.Create(combo.Id, product1.Id, product1.Name, null, null, 2, 50m);
         combo.AddItem(comboItem);
 
@@ -108,9 +108,9 @@ public class GetCatalogQueryHandlerTests
     {
         var combo = CreateTestCombo(salePrice: 80m);
         var product1 = CreateTestProduct("Product1");
-        product1.UpdatePrice(50m);
+        _ = product1; // price set at creation
         var product2 = CreateTestProduct("Product2");
-        product2.UpdatePrice(75m);
+        _ = product2; // price set at creation
 
         var item1 = ComboItem.Create(combo.Id, product1.Id, product1.Name, null, null, 2, 50m);
         var item2 = ComboItem.Create(combo.Id, product2.Id, product2.Name, null, null, 1, 75m);
@@ -133,7 +133,7 @@ public class GetCatalogQueryHandlerTests
         var comboCatalogItem = result.Data.Combos[0];
         comboCatalogItem.OriginalPrice.Should().Be(175m);
         comboCatalogItem.Price.Should().Be(80m);
-        comboCatalogItem.DiscountPercent.Should().BeApproximately(54.3f, 0.1f);
+        ((float)comboCatalogItem.DiscountPercent!.Value).Should().BeApproximately(54.3f, 0.1f);
     }
 
     [Fact]
@@ -141,7 +141,6 @@ public class GetCatalogQueryHandlerTests
     {
         var combo = CreateTestCombo(salePrice: 100m);
         var product = CreateTestProduct();
-        product.UpdatePrice(50m);
 
         var item = ComboItem.Create(combo.Id, product.Id, product.Name, null, null, 2, 50m);
         combo.AddItem(item);

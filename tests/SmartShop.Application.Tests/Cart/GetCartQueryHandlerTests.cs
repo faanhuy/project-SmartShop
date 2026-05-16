@@ -47,7 +47,7 @@ public class GetCartQueryHandlerTests
         var userId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
         var productId = Guid.NewGuid();
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "P", null, 1, 100m);
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
 
         var result = await CreateHandler().Handle(new GetCartQuery(userId), default);

@@ -29,7 +29,7 @@ public class GetComboByIdQueryHandlerTests
     public async Task Handle_ComboExists_ReturnsComboDto()
     {
         var combo = CreateTestCombo(2);
-        _comboRepo.Setup(r => r.GetByIdAsync(combo.Id, default)).ReturnsAsync(combo);
+        _comboRepo.Setup(r => r.GetByIdWithProductsAsync(combo.Id, default)).ReturnsAsync(combo);
 
         var result = await CreateHandler().Handle(new GetComboByIdQuery(combo.Id), default);
 
@@ -46,7 +46,7 @@ public class GetComboByIdQueryHandlerTests
     public async Task Handle_ComboExists_MapsItemsCorrectly()
     {
         var combo = CreateTestCombo(2);
-        _comboRepo.Setup(r => r.GetByIdAsync(combo.Id, default)).ReturnsAsync(combo);
+        _comboRepo.Setup(r => r.GetByIdWithProductsAsync(combo.Id, default)).ReturnsAsync(combo);
 
         var result = await CreateHandler().Handle(new GetComboByIdQuery(combo.Id), default);
 
@@ -60,7 +60,7 @@ public class GetComboByIdQueryHandlerTests
     public async Task Handle_ComboNotFound_ThrowsNotFoundException()
     {
         var comboId = Guid.NewGuid();
-        _comboRepo.Setup(r => r.GetByIdAsync(comboId, default)).ReturnsAsync((Combo?)null);
+        _comboRepo.Setup(r => r.GetByIdWithProductsAsync(comboId, default)).ReturnsAsync((Combo?)null);
 
         var act = () => CreateHandler().Handle(new GetComboByIdQuery(comboId), default);
 
@@ -70,8 +70,9 @@ public class GetComboByIdQueryHandlerTests
     [Fact]
     public async Task Handle_ComboExists_IncludesIsCurrentlyActive()
     {
-        var combo = CreateTestCombo(2);
-        _comboRepo.Setup(r => r.GetByIdAsync(combo.Id, default)).ReturnsAsync(combo);
+        var combo = Combo.Create("Active Combo", "Title", "Desc", "img.jpg", 99.99m,
+            DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(30));
+        _comboRepo.Setup(r => r.GetByIdWithProductsAsync(combo.Id, default)).ReturnsAsync(combo);
 
         var result = await CreateHandler().Handle(new GetComboByIdQuery(combo.Id), default);
 

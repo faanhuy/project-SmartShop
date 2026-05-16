@@ -6,6 +6,7 @@ using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
 using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Application.Interfaces;
 using CartEntity = SmartShop.Domain.Entities.Cart;
 
 namespace SmartShop.Application.Tests.Orders;
@@ -100,7 +101,7 @@ public class PlaceOrderComboTests
         var comboItem = CreateComboCartItem(
             cart.Id,
             Guid.NewGuid(),
-            qty: 1,
+            quantity: 1,
             salePrice: 99.99m,
             components: new List<(Guid, string, int, decimal)>
             {
@@ -132,7 +133,7 @@ public class PlaceOrderComboTests
         var comboItem = CreateComboCartItem(
             cart.Id,
             Guid.NewGuid(),
-            qty: 2, // Quantity 2
+            quantity: 2, // Quantity 2
             salePrice: 99.99m,
             components: new List<(Guid, string, int, decimal)>
             {
@@ -168,7 +169,7 @@ public class PlaceOrderComboTests
         var comboItem = CreateComboCartItem(
             cart.Id,
             Guid.NewGuid(),
-            qty: 2, // Need 2 units (1 per combo * qty 2)
+            quantity: 2, // Need 2 units (1 per combo * qty 2)
             salePrice: 99.99m,
             components: new List<(Guid, string, int, decimal)>
             {
@@ -210,7 +211,7 @@ public class PlaceOrderComboTests
         var comboItem = CreateComboCartItem(
             cart.Id,
             Guid.NewGuid(),
-            qty: 1,
+            quantity: 1,
             salePrice: 99.99m,
             components: new List<(Guid, string, int, decimal)>
             {
@@ -254,7 +255,7 @@ public class PlaceOrderComboTests
         var comboItem = CreateComboCartItem(
             cart.Id,
             Guid.NewGuid(),
-            qty: 2,
+            quantity: 2,
             salePrice: 199.99m,
             components: new List<(Guid, string, int, decimal)>
             {

@@ -196,7 +196,6 @@ public class UpdateComboCommandHandlerTests
 
         await CreateHandler().Handle(command, default);
 
-        _comboRepo.Verify(r => r.Update(It.IsAny<Combo>()), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 }

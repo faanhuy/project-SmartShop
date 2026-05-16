@@ -8,7 +8,7 @@ import { getApiError } from '../utils/errorHandler';
 import { formatPrice } from '../utils/formatters';
 import { slugify } from '../utils/slugify';
 import type { BulkImportResult, CategoryDto, CreateProductRequest, ProductDto, UpdateProductRequest } from '../types/product';
-import type { ProductSize, SizeDto, SizeCategory } from '../types/size';
+import type { SizeDto, SizeCategory } from '../types/size';
 import { SIZE_CATEGORY_LABELS } from '../types/size';
 import GenerateDescriptionButton from '../components/GenerateDescriptionButton';
 import AdminLayout from '../components/AdminLayout';

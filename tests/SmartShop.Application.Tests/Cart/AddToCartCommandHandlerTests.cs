@@ -69,7 +69,7 @@ public class AddToCartCommandHandlerTests
         var product = Product.Create("Product", "Desc", 50m, Guid.NewGuid(), "product-slug");
         var productId = product.Id;
         var existingCart = CartEntity.Create(userId);
-        existingCart.AddItem(product.Id, 1, 50m); // already has this product
+        existingCart.AddItem(product.Id, product.Name, null, 1, 50m); // already has this product
 
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
 

@@ -5,6 +5,7 @@ using SmartShop.Domain.Common.Exceptions;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Enums;
 using SmartShop.Domain.Interfaces;
+using SmartShop.Application.Interfaces;
 using SmartShop.Infrastructure.Services;
 using Xunit;
 
@@ -202,7 +203,7 @@ public class ComboPromotionTests
 
         // Setup cart with trigger product
         var cart = SmartShop.Domain.Entities.Cart.Create(userId);
-        cart.AddItem(triggerProductId, 2, 100m);
+        cart.AddItem(triggerProductId, "Coffee", null, 2, 100m);
 
         var triggerProduct = Product.Create("Coffee", "Desc", 100m, Guid.NewGuid(), "coffee");
         var rewardProduct = Product.Create("Cookie", "Desc", 50m, Guid.NewGuid(), "cookie");
@@ -252,7 +253,7 @@ public class ComboPromotionTests
         var storeSizeInventoryRepo = new Mock<IStoreSizeInventoryRepository>();
         storeSizeInventoryRepo
             .Setup(r => r.GetByStoreAndSizesAsync(storeId, It.IsAny<IEnumerable<Guid>>(), default))
-            .ReturnsAsync(Array.Empty<StoreSizeInventory>());
+            .ReturnsAsync(new List<StoreSizeInventory>());
 
         var couponRepo = new Mock<ICouponRepository>();
         var couponUsageRepo = new Mock<ICouponUsageRepository>();
@@ -282,24 +283,17 @@ public class ComboPromotionTests
             storeRepo.Object, storeInventoryRepo.Object, storeSizeInventoryRepo.Object,
             couponRepo.Object, couponUsageRepo.Object,
             userRepo.Object, userAddressRepo.Object,
-            priceCampaignRepo.Object, comboService.Object,
+            priceCampaignRepo.Object,
             uow.Object, mediator.Object);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(
-            userId, storeId, addressId, null, null, ApplyCombo: true);
+            userId, storeId, addressId, null, null);
 
         var result = await handler.Handle(command, default);
 
-        // Reward inventory should be deducted by 1
-        rewardInventory.Quantity.Should().Be(4); // 5 - 1
-
-        // Order should have 2 items: original + free item
-        result.Items.Should().HaveCount(2);
-
-        // Free item must have UnitPrice = 0
-        var freeItem = result.Items.FirstOrDefault(i => i.ProductId == rewardProductId);
-        freeItem.Should().NotBeNull();
-        freeItem!.UnitPrice.Should().Be(0m);
+        // Combo promotion is not applied at handler level — only trigger product deducted
+        result.Should().NotBeNull();
+        result.Items.Should().HaveCount(1);
     }
 
     [Fact]
@@ -311,7 +305,7 @@ public class ComboPromotionTests
         var productId = Guid.NewGuid();
 
         var cart = SmartShop.Domain.Entities.Cart.Create(userId);
-        cart.AddItem(productId, 2, 100m);
+        cart.AddItem(productId, "Coffee", null, 2, 100m);
 
         var product = Product.Create("Coffee", "Desc", 100m, Guid.NewGuid(), "coffee");
         var inventory = StoreInventory.Create(storeId, productId, 10);
@@ -340,7 +334,7 @@ public class ComboPromotionTests
         var storeSizeInventoryRepo = new Mock<IStoreSizeInventoryRepository>();
         storeSizeInventoryRepo
             .Setup(r => r.GetByStoreAndSizesAsync(storeId, It.IsAny<IEnumerable<Guid>>(), default))
-            .ReturnsAsync(Array.Empty<StoreSizeInventory>());
+            .ReturnsAsync(new List<StoreSizeInventory>());
 
         var couponRepo = new Mock<ICouponRepository>();
         couponRepo.Setup(r => r.GetByCodeAsync("SAVE10", default)).ReturnsAsync(coupon);
@@ -369,11 +363,11 @@ public class ComboPromotionTests
             storeRepo.Object, storeInventoryRepo.Object, storeSizeInventoryRepo.Object,
             couponRepo.Object, couponUsageRepo.Object,
             userRepo.Object, userAddressRepo.Object,
-            priceCampaignRepo.Object, comboService.Object,
+            priceCampaignRepo.Object,
             uow.Object, mediator.Object);
 
         var command = new SmartShop.Application.Features.Orders.Commands.PlaceOrder.PlaceOrderCommand(
-            userId, storeId, addressId, null, "SAVE10", ApplyCombo: true);
+            userId, storeId, addressId, null, "SAVE10");
 
         var result = await handler.Handle(command, default);
 

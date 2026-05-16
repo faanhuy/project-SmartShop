@@ -1,7 +1,6 @@
 using FluentAssertions;
 using MediatR;
 using Moq;
-using SmartShop.Application.Services;
 using SmartShop.Domain.Common.Exceptions;
 using Xunit;
 using SmartShop.Application.Features.Orders.Commands.PlaceOrder;
@@ -25,7 +24,6 @@ public class PlaceOrderCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IUserAddressRepository> _userAddressRepo = new();
     private readonly Mock<IPriceCampaignRepository> _priceCampaignRepo = new();
-    private readonly Mock<IComboPromotionService> _comboService = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _storeId = Guid.NewGuid();
@@ -33,7 +31,6 @@ public class PlaceOrderCommandHandlerTests
 
     public PlaceOrderCommandHandlerTests()
     {
-        // Default: no effective price rules
         _priceCampaignRepo
             .Setup(r => r.GetEffectivePriceItemsAsync(
                 It.IsAny<Guid>(),
@@ -41,14 +38,6 @@ public class PlaceOrderCommandHandlerTests
                 It.IsAny<DateTime>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(Guid, Guid?), (int, decimal)>());
-
-        // Default: no combo match
-        _comboService
-            .Setup(s => s.FindApplicableComboAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<IEnumerable<CartItemInput>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ComboMatchResult?)null);
     }
 
     private PlaceOrderCommandHandler CreateHandler() =>
@@ -56,7 +45,7 @@ public class PlaceOrderCommandHandlerTests
             _storeRepo.Object, _storeInventoryRepo.Object, _storeSizeInventoryRepo.Object,
             _couponRepo.Object, _couponUsageRepo.Object,
             _userRepo.Object, _userAddressRepo.Object,
-            _priceCampaignRepo.Object, _comboService.Object,
+            _priceCampaignRepo.Object,
             _uow.Object, _mediator.Object);
 
     private PlaceOrderCommand ValidCommand(Guid userId, string? couponCode = null) =>
@@ -90,7 +79,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 2, 100m);
+        cart.AddItem(productId, "Laptop", null, 2, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
@@ -136,7 +125,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "Laptop", null, 1, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         product.Deactivate();
 
@@ -155,7 +144,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 5, 100m);
+        cart.AddItem(productId, "Laptop", null, 5, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
@@ -174,7 +163,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 2, 100m);
+        cart.AddItem(productId, "Laptop", null, 2, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var inventory = StoreInventory.Create(_storeId, productId, 10);
 
@@ -198,7 +187,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "Laptop", null, 1, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
@@ -219,7 +208,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 2, 100m); // 200k
+        cart.AddItem(productId, "Laptop", null, 2, 100m); // 200k
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("SALE10", SmartShop.Domain.Enums.DiscountType.Percentage, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 100);
 
@@ -246,7 +235,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "Laptop", null, 1, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("EXPIRED", SmartShop.Domain.Enums.DiscountType.FixedAmount, 50, DateTime.UtcNow.AddDays(-1), 5, "desc", 50);
 
@@ -267,7 +256,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "Laptop", null, 1, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("ONCE", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 50);
 
@@ -289,7 +278,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 40m); // chỉ 40k
+        cart.AddItem(productId, "Laptop", null, 1, 40m); // chỉ 40k
         var product = Product.Create("Laptop", "Desc", 40m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("MIN100", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 5, "desc", 100);
 
@@ -311,7 +300,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "Laptop", null, 1, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
         var coupon = Coupon.Create("LIMITED", SmartShop.Domain.Enums.DiscountType.FixedAmount, 10, DateTime.UtcNow.AddDays(1), 1, "desc", 50);
         // Đã dùng hết lượt
@@ -335,7 +324,7 @@ public class PlaceOrderCommandHandlerTests
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 100m);
+        cart.AddItem(productId, "Laptop", null, 1, 100m);
         var product = Product.Create("Laptop", "Desc", 100m, Guid.NewGuid(), "laptop");
 
         var address = UserAddress.Create(

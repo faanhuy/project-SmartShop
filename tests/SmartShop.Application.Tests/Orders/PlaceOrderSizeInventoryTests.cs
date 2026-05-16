@@ -23,7 +23,19 @@ public class PlaceOrderSizeInventoryTests
     private readonly Mock<ICouponUsageRepository> _couponUsageRepo = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IUserAddressRepository> _userAddressRepo = new();
+    private readonly Mock<IPriceCampaignRepository> _priceCampaignRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+
+    public PlaceOrderSizeInventoryTests()
+    {
+        _priceCampaignRepo
+            .Setup(r => r.GetEffectivePriceItemsAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<(Guid, Guid?)>>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(Guid, Guid?), (int, decimal)>());
+    }
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _storeId = Guid.NewGuid();
     private readonly Guid _addressId = Guid.NewGuid();
@@ -32,7 +44,8 @@ public class PlaceOrderSizeInventoryTests
         new(_cartRepo.Object, _orderRepo.Object, _productRepo.Object,
             _storeRepo.Object, _storeInventoryRepo.Object, _storeSizeInventoryRepo.Object,
             _couponRepo.Object, _couponUsageRepo.Object,
-            _userRepo.Object, _userAddressRepo.Object, _uow.Object, _mediator.Object);
+            _userRepo.Object, _userAddressRepo.Object, _priceCampaignRepo.Object,
+            _uow.Object, _mediator.Object);
 
     private PlaceOrderCommand ValidCommand(Guid userId) =>
         new(userId, _storeId, _addressId, null, null);
@@ -67,24 +80,23 @@ public class PlaceOrderSizeInventoryTests
 
         // Cart item with SizeId set
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 2, 200m, sizeId, "M");
+        cart.AddItem(productId, "T-Shirt", null, 2, 200m, sizeId, "M");
 
         var sizeInventory = StoreSizeInventory.Create(_storeId, productId, sizeId, quantity: 10);
+        var baseInventory = StoreInventory.Create(_storeId, productId, 10);
 
         _cartRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(cart);
         _productRepo.Setup(r => r.GetByIdAsync(productId, default)).ReturnsAsync(product);
         SetupActiveStore();
         SetupDefaultAddress();
 
-        // Sized items: GetByStoreAndSizesAsync returns the size inventory
         _storeSizeInventoryRepo
             .Setup(r => r.GetByStoreAndSizesAsync(_storeId, It.IsAny<IEnumerable<Guid>>(), default))
             .ReturnsAsync(new List<StoreSizeInventory> { sizeInventory });
 
-        // Non-sized: no StoreInventory needed
         _storeInventoryRepo
             .Setup(r => r.GetByStoreAndProductsAsync(_storeId, It.IsAny<IEnumerable<Guid>>(), default))
-            .ReturnsAsync(Array.Empty<StoreInventory>());
+            .ReturnsAsync(new[] { baseInventory });
 
         _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
@@ -92,11 +104,7 @@ public class PlaceOrderSizeInventoryTests
 
         result.Should().NotBeNull();
         sizeInventory.Quantity.Should().Be(8); // 10 - 2
-
-        // StoreInventory should not have been called for deduction
-        _storeInventoryRepo.Verify(
-            r => r.GetByStoreAndProductsAsync(_storeId, It.IsAny<IEnumerable<Guid>>(), default),
-            Times.Never);
+        baseInventory.Quantity.Should().Be(8); // also deducted for sized products
     }
 
     /// <summary>
@@ -112,7 +120,7 @@ public class PlaceOrderSizeInventoryTests
         // HasSizes defaults to false
 
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 1, 500m); // no sizeId
+        cart.AddItem(productId, "Laptop", null, 1, 500m); // no sizeId
 
         var inventory = StoreInventory.Create(_storeId, productId, 5);
 
@@ -156,7 +164,7 @@ public class PlaceOrderSizeInventoryTests
         typeof(Product).GetProperty(nameof(Product.HasSizes))!.SetValue(product, true);
 
         var cart = CartEntity.Create(userId);
-        cart.AddItem(productId, 5, 350m, sizeId, "XL"); // wants 5
+        cart.AddItem(productId, "Hoodie", null, 5, 350m, sizeId, "XL"); // wants 5
 
         var sizeInventory = StoreSizeInventory.Create(_storeId, productId, sizeId, quantity: 2); // only 2 in stock
 

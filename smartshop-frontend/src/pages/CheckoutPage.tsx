@@ -397,14 +397,14 @@ export default function CheckoutPage() {
                     {cart.items.map((item) => (
                       <div key={`${item.productId}-${item.sizeId ?? ''}`} className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg shrink-0 overflow-hidden">
-                          {item.productImageUrl ? (
-                            <img src={getImageUrl(item.productImageUrl)} alt={item.productName} className="w-full h-full object-cover" />
+                          {item.imageUrl ? (
+                            <img src={getImageUrl(item.imageUrl)} alt={item.displayName} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300 text-lg">📦</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{item.productName}</p>
+                          <p className="text-sm font-medium text-gray-800 truncate">{item.displayName}</p>
                           <p className="text-xs text-gray-500">
                             x{item.quantity} phần{item.sizeLabel ? ` · ${item.sizeLabel}` : ''}
                           </p>
