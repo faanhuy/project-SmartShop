@@ -195,7 +195,7 @@ export default function ProductDetailPage() {
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col md:flex-row gap-8">
-          <div className="md:w-2/5">
+          <div className="md:w-2/5 self-start">
             <div className="bg-gray-100 rounded-xl h-64 md:h-80 flex items-center justify-center overflow-hidden">
               {product.imageUrl ? (
                 <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-contain" />

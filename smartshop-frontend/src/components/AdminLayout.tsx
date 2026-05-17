@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu, FiExternalLink, FiMapPin, FiArchive, FiPercent, FiSliders, FiLayers } from 'react-icons/fi';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  FiGrid, FiPackage, FiShoppingBag, FiTag, FiLogOut, FiMenu,
+  FiExternalLink, FiMapPin, FiArchive, FiPercent, FiSliders,
+  FiLayers, FiRotateCcw, FiChevronDown, FiChevronRight,
+} from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 
 interface AdminLayoutProps {
@@ -8,17 +12,104 @@ interface AdminLayoutProps {
   title: string;
 }
 
-const NAV_ITEMS = [
-  { to: '/admin',           label: 'Tổng quan',      icon: FiGrid,        end: true  },
-  { to: '/admin/products',  label: 'Món ăn',         icon: FiPackage,     end: false },
-  { to: '/admin/orders',    label: 'Đơn giao',       icon: FiShoppingBag, end: false },
-  { to: '/admin/coupons',   label: 'Mã giảm giá',    icon: FiTag,         end: false },
-  { to: '/admin/stores',    label: 'Chi nhánh',      icon: FiMapPin,      end: false },
-  { to: '/admin/inventory',          label: 'Quản lý tồn kho',  icon: FiArchive,  end: false },
-  { to: '/admin/sizes',              label: 'Quản lý kích cỡ',   icon: FiSliders,  end: false },
-  { to: '/admin/promotional-prices', label: 'Giá khuyến mãi',   icon: FiPercent,  end: false },
-  { to: '/admin/combos',             label: 'Combo',             icon: FiLayers,   end: false },
+interface NavChild {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+}
+
+interface NavGroup {
+  label: string;
+  icon: React.ElementType;
+  children: NavChild[];
+}
+
+interface NavSingle {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+  end?: boolean;
+}
+
+type NavItem = NavSingle | NavGroup;
+
+const isGroup = (item: NavItem): item is NavGroup => 'children' in item;
+
+const NAV_ITEMS: NavItem[] = [
+  { to: '/admin', label: 'Tổng quan', icon: FiGrid, end: true },
+  {
+    label: 'Sản phẩm',
+    icon: FiPackage,
+    children: [
+      { to: '/admin/products',          label: 'Món ăn',          icon: FiPackage  },
+      { to: '/admin/sizes',             label: 'Kích cỡ',         icon: FiSliders  },
+      { to: '/admin/combos',            label: 'Combo',           icon: FiLayers   },
+      { to: '/admin/promotional-prices',label: 'Giá khuyến mãi',  icon: FiPercent  },
+    ],
+  },
+  {
+    label: 'Vận hành',
+    icon: FiShoppingBag,
+    children: [
+      { to: '/admin/orders',          label: 'Đơn giao',  icon: FiShoppingBag },
+      { to: '/admin/return-requests', label: 'Trả hàng',  icon: FiRotateCcw   },
+    ],
+  },
+  {
+    label: 'Kinh doanh',
+    icon: FiMapPin,
+    children: [
+      { to: '/admin/stores',    label: 'Chi nhánh',      icon: FiMapPin   },
+      { to: '/admin/inventory', label: 'Tồn kho',        icon: FiArchive  },
+      { to: '/admin/coupons',   label: 'Mã giảm giá',   icon: FiTag      },
+    ],
+  },
 ];
+
+function NavGroupItem({ group, onClose }: { group: NavGroup; onClose?: () => void }) {
+  const location = useLocation();
+  const isAnyChildActive = group.children.some(c => location.pathname.startsWith(c.to));
+  const [open, setOpen] = useState(isAnyChildActive);
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+          isAnyChildActive
+            ? 'text-white bg-gray-800'
+            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+        }`}
+      >
+        <group.icon size={16} />
+        <span className="flex-1 text-left">{group.label}</span>
+        {open ? <FiChevronDown size={13} /> : <FiChevronRight size={13} />}
+      </button>
+
+      {open && (
+        <div className="mt-0.5 ml-3 pl-3 border-l border-gray-700 space-y-0.5">
+          {group.children.map(child => (
+            <NavLink
+              key={child.to}
+              to={child.to}
+              onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-rose-600 text-white font-medium'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <child.icon size={14} />
+              {child.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const navigate = useNavigate();
@@ -35,25 +126,29 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         </span>
       </div>
 
-      <nav className="flex-1 py-3 px-2 space-y-0.5">
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            onClick={onClose}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-rose-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`
-            }
-          >
-            <Icon size={16} />
-            {label}
-          </NavLink>
-        ))}
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+        {NAV_ITEMS.map((item, i) =>
+          isGroup(item) ? (
+            <NavGroupItem key={i} group={item} onClose={onClose} />
+          ) : (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-rose-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <item.icon size={16} />
+              {item.label}
+            </NavLink>
+          )
+        )}
       </nav>
 
       <div className="px-4 py-4 border-t border-gray-700/60 space-y-3">
@@ -86,12 +181,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-56 shrink-0">
         <SidebarContent />
       </aside>
 
-      {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
@@ -104,7 +197,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         </div>
       )}
 
-      {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="bg-white border-b px-4 py-3 flex items-center gap-3 shrink-0">
           <button

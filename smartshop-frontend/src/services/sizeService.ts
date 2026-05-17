@@ -3,7 +3,6 @@ import type { ApiResponse } from '../types/auth';
 import type {
   ProductSize,
   EffectivePriceItem,
-  BulkEffectivePricesResponse,
   SizeCategory,
   SizeDto,
   CreateSizeRequest,
@@ -21,11 +20,11 @@ export const sizeService = {
     storeId: string,
     items: { productId: string; sizeId: string | null }[],
   ): Promise<EffectivePriceItem[]> => {
-    const { data } = await api.post<ApiResponse<BulkEffectivePricesResponse>>(
+    const { data } = await api.post<ApiResponse<EffectivePriceItem[]>>(
       '/price-campaigns/bulk-effective-prices',
       { storeId, items },
     );
-    return data.data?.prices ?? [];
+    return data.data ?? [];
   },
 
   addSize: async (productId: string, sizeLabel: string, displayOrder: number): Promise<ProductSize> => {

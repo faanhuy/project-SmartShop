@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IComboRepository, ComboRepository>();
         services.AddScoped<IComboPromotionRepository, ComboPromotionRepository>();
         services.AddScoped<IComboPromotionService, ComboPromotionService>();
+        services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
 
         services.AddScoped<IDataSeeder, AppSettingsSeeder>();
         services.AddScoped<IDataSeeder, AdminUserSeeder>();

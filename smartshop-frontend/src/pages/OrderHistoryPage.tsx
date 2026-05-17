@@ -10,6 +10,7 @@ import {
   FiMapPin,
   FiPackage,
   FiRefreshCw,
+  FiRotateCcw,
   FiShoppingBag,
 } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
@@ -125,13 +126,22 @@ export default function OrderHistoryPage() {
                   Xem trạng thái giao hàng, thanh toán lại đơn VNPay và mở chi tiết từng đơn.
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/products')}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
-              >
-                <FiShoppingBag size={17} />
-                Đặt món mới
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigate('/orders/return-requests')}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                >
+                  <FiRotateCcw size={17} />
+                  Trả hàng
+                </button>
+                <button
+                  onClick={() => navigate('/products')}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+                >
+                  <FiShoppingBag size={17} />
+                  Đặt món mới
+                </button>
+              </div>
             </div>
           </div>
 

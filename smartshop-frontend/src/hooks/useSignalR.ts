@@ -45,6 +45,10 @@ export function useSignalR(onOrderStatusUpdated: (data: SignalRNotification) => 
       callbackRef.current(normalizeNotificationPayload(data));
     });
 
+    connection.on('ReturnRequestUpdated', (data: any) => {
+      callbackRef.current(normalizeNotificationPayload(data));
+    });
+
     connection.start().catch((err) => console.error('SignalR connection failed:', err));
     connectionRef.current = connection;
 

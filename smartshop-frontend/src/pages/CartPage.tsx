@@ -283,7 +283,7 @@ export default function CartPage() {
                         )}
                         <div className="flex gap-2 text-amber-600 font-bold items-center mb-1">
                           <span className="text-xl">{(getEffectiveUnitPrice(item) * item.quantity).toLocaleString('vi-VN')} đ</span>
-                          {item.itemType === 'Product' && effectivePrices.get(`${item.productId}:${item.sizeId ?? ''}`)?.hasDiscount && (
+                          {item.itemType === 'Product' && effectivePrices.get(`${item.productId}:${item.sizeId ?? ''}`)?.hasPromotion && (
                             <span className="text-gray-400 line-through text-sm font-normal">
                               {item.subTotal.toLocaleString('vi-VN')} đ
                             </span>

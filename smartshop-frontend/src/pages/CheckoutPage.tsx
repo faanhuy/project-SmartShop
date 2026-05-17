@@ -5,8 +5,10 @@ import { orderService } from '../services/orderService';
 import { cartService } from '../services/cartService';
 import { addressService } from '../services/addressService';
 import { paymentService } from '../services/paymentService';
-import type { CartDto } from '../types/cart';
+import { sizeService } from '../services/sizeService';
+import type { CartDto, CartItemDto } from '../types/cart';
 import type { AddressDto, PaymentMethod } from '../types/order';
+import type { EffectivePriceItem } from '../types/size';
 import { FiArrowLeft, FiShoppingBag, FiMapPin, FiRepeat } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -38,11 +40,34 @@ export default function CheckoutPage() {
   const { selectedStore, fetchStores } = useStoreSelectionStore();
   const [storeModalOpen, setStoreModalOpen] = useState(false);
 
+  // Effective prices from pricing table
+  const [effectivePrices, setEffectivePrices] = useState<Map<string, EffectivePriceItem>>(new Map());
+
   const navigate = useNavigate();
 
   const savedCoupon = couponSession.load();
   const couponCode = savedCoupon?.code ?? null;
   const discountAmount = savedCoupon?.result.discountAmount ?? 0;
+
+  const loadEffectivePrices = async (cartData: CartDto, storeId: string) => {
+    const productItems = cartData.items.filter((i) => i.itemType === 'Product' && i.productId);
+    if (productItems.length === 0) { setEffectivePrices(new Map()); return; }
+    try {
+      const items = productItems.map((i) => ({ productId: i.productId!, sizeId: i.sizeId }));
+      const prices = await sizeService.getBulkEffectivePrices(storeId, items);
+      const map = new Map<string, EffectivePriceItem>();
+      prices.forEach((p) => map.set(`${p.productId}:${p.sizeId ?? ''}`, p));
+      setEffectivePrices(map);
+    } catch {
+      setEffectivePrices(new Map());
+    }
+  };
+
+  const getEffectiveUnitPrice = (item: CartItemDto): number => {
+    if (item.itemType !== 'Product' || !item.productId) return item.unitPrice;
+    const key = `${item.productId}:${item.sizeId ?? ''}`;
+    return effectivePrices.get(key)?.effectivePrice ?? item.unitPrice;
+  };
 
   useEffect(() => {
     cartService.getCart()
@@ -61,6 +86,12 @@ export default function CheckoutPage() {
 
     fetchStores().catch(() => {});
   }, [fetchStores]);
+
+  useEffect(() => {
+    if (!cart || !selectedStore) { setEffectivePrices(new Map()); return; }
+    loadEffectivePrices(cart, selectedStore.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, selectedStore]);
 
   // Auto-open store modal if no store selected
   useEffect(() => {
@@ -116,6 +147,10 @@ export default function CheckoutPage() {
   };
 
   const hasAddresses = addresses.length > 0;
+
+  const effectiveTotal = cart
+    ? cart.items.reduce((sum, i) => sum + getEffectiveUnitPrice(i) * i.quantity, 0)
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -410,7 +445,7 @@ export default function CheckoutPage() {
                           </p>
                         </div>
                         <p className="text-sm font-semibold text-rose-600 shrink-0">
-                          {formatPrice(item.subTotal)}
+                          {formatPrice(getEffectiveUnitPrice(item) * item.quantity)}
                         </p>
                       </div>
                     ))}
@@ -419,7 +454,7 @@ export default function CheckoutPage() {
                   <div className="border-t pt-3 space-y-1.5">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Tạm tính</span>
-                      <span>{formatPrice(cart.totalAmount)}</span>
+                      <span>{formatPrice(effectiveTotal)}</span>
                     </div>
                     {couponCode && discountAmount > 0 && (
                       <div className="flex justify-between text-sm text-green-600">
@@ -434,7 +469,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t">
                       <span>Tổng cộng</span>
                       <span className="text-rose-600">
-                        {formatPrice(Math.max(0, cart.totalAmount - discountAmount))}
+                        {formatPrice(Math.max(0, effectiveTotal - discountAmount))}
                       </span>
                     </div>
                   </div>

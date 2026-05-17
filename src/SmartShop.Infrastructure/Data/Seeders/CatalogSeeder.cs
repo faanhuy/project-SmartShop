@@ -91,15 +91,6 @@ internal sealed class CatalogSeeder(
                     seed.OriginalPrice), cancellationToken);
                 continue;
             }
-            // Preserve size metadata configured from admin to avoid resetting on startup seed sync.
-            existing.Update(
-                seed.Name,
-                seed.Description,
-                seed.Price,
-                seed.ImageUrl,
-                seed.OriginalPrice ?? seed.Price,
-                existing.HasSizes,
-                existing.SizeType);
             existing.Activate();
         }
 

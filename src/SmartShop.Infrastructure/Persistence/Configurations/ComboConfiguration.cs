@@ -19,7 +19,7 @@ public class ComboConfiguration : IEntityTypeConfiguration<Combo>
             .HasMaxLength(300);
 
         builder.Property(e => e.Description)
-            .HasMaxLength(1000);
+            .HasMaxLength(4000);
 
         builder.Property(e => e.ImageUrl)
             .IsRequired()

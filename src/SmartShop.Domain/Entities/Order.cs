@@ -28,6 +28,8 @@ public class Order : BaseAuditableEntity
     public Ward? ShippingWard { get; private set; }
     public Province? ShippingProvince { get; private set; }
 
+    public DateTime? DeliveredAt { get; private set; }
+
     public User? User { get; private set; }
     public Store? Store { get; private set; }
 
@@ -97,6 +99,11 @@ public class Order : BaseAuditableEntity
     public void UpdateStatus(OrderStatus status)
     {
         Status = status;
+    }
+
+    public void SetDeliveredAt(DateTime deliveredAt)
+    {
+        DeliveredAt = deliveredAt;
     }
 
     public void ApplyCoupon(string couponCode, decimal discountAmount)

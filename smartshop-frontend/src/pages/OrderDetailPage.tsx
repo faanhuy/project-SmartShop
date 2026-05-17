@@ -4,13 +4,17 @@ import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPackage } from 'react-icons/fi';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
+import returnRequestService from '../services/returnRequestService';
 import type { OrderDto } from '../types/order';
 import { ORDER_STATUSES } from '../types/order';
+import type { ReturnRequestDto } from '../types/returnRequest';
+import { ReturnStatus, RETURN_STATUS_LABELS, RETURN_STATUS_COLORS } from '../types/returnRequest';
 import { getApiError } from '../utils/errorHandler';
 import { formatPrice, formatDateTime } from '../utils/formatters';
 import { getImageUrl } from '../utils/imageUrl';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import CreateReturnRequestModal from '../components/returns/CreateReturnRequestModal';
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   COD: 'Thanh toán khi nhận hàng (COD)',
@@ -26,14 +30,31 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [expandedComponents, setExpandedComponents] = useState<Set<number>>(new Set());
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [existingReturnRequest, setExistingReturnRequest] = useState<ReturnRequestDto | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!id) return;
-    orderService.getOrderById(id)
-      .then(setOrder)
-      .catch(() => setError('Không tìm thấy đơn giao.'))
-      .finally(() => setLoading(false));
+    const loadData = async () => {
+      try {
+        const orderData = await orderService.getOrderById(id);
+        setOrder(orderData);
+
+        // Check if there's an existing return request for this order
+        const returnRequests = await returnRequestService.getMyReturnRequests();
+        const existingReturn = returnRequests.find((r) => r.orderId === id);
+        if (existingReturn) {
+          setExistingReturnRequest(existingReturn);
+        }
+      } catch {
+        setError('Không tìm thấy đơn giao.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [id]);
 
   const handleRetryPayment = async () => {
@@ -61,6 +82,41 @@ export default function OrderDetailPage() {
       toast.error(getApiError(err, 'Huỷ đơn giao thất bại.'));
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const canRequestReturn = (): boolean => {
+    if (!order) return false;
+    // Block only if there's a Pending or Approved request; Rejected allows re-submission
+    if (existingReturnRequest && existingReturnRequest.status !== ReturnStatus.Rejected) return false;
+
+    const preShipStatuses = ['Pending', 'Confirmed', 'Processing'];
+    const isPaidBeforeShip =
+      order.paymentStatus === 'Paid' && preShipStatuses.includes(order.status);
+
+    if (isPaidBeforeShip) return true;
+
+    if (order.status === 'Delivered') {
+      const deliveredAt = order.createdAt;
+      const daysDiff = Math.floor(
+        (Date.now() - new Date(deliveredAt).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return daysDiff <= 7;
+    }
+
+    return false;
+  };
+
+  const handleReturnSuccess = async () => {
+    if (!id) return;
+    try {
+      const returnRequests = await returnRequestService.getMyReturnRequests();
+      const existingReturn = returnRequests.find((r) => r.orderId === id);
+      if (existingReturn) {
+        setExistingReturnRequest(existingReturn);
+      }
+    } catch (err) {
+      toast.error(getApiError(err, 'Không thể cập nhật dữ liệu.'));
     }
   };
 
@@ -235,11 +291,44 @@ export default function OrderDetailPage() {
                   {retrying ? 'Đang xử lý...' : 'Thanh toán lại'}
                 </button>
               )}
+            {canRequestReturn() && (
+              <button
+                onClick={() => setShowReturnModal(true)}
+                className="text-sm px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+              >
+                Yêu cầu trả hàng
+              </button>
+            )}
+            {existingReturnRequest && existingReturnRequest.status !== ReturnStatus.Rejected && (
+              <span
+                className={`text-sm px-3 py-1.5 rounded-lg font-medium ${RETURN_STATUS_COLORS[existingReturnRequest.status]}`}
+              >
+                Yêu cầu hoàn tiền: {RETURN_STATUS_LABELS[existingReturnRequest.status]}
+              </span>
+            )}
           </div>
           <p className="text-xl font-bold text-rose-700">
             Tổng cộng: {formatPrice(order.totalAmount)}
           </p>
         </div>
+
+        {existingReturnRequest?.status === ReturnStatus.Rejected && (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 text-sm">
+            <p className="font-semibold text-red-700 mb-1">Yêu cầu hoàn tiền bị từ chối</p>
+            {existingReturnRequest.adminNote && (
+              <p className="text-red-600">Lý do: {existingReturnRequest.adminNote}</p>
+            )}
+            <p className="text-gray-500 mt-1">Bạn có thể gửi yêu cầu hoàn tiền mới.</p>
+          </div>
+        )}
+
+        <CreateReturnRequestModal
+          isOpen={showReturnModal}
+          onClose={() => setShowReturnModal(false)}
+          orderId={order.id}
+          orderTotal={order.totalAmount}
+          onSuccess={handleReturnSuccess}
+        />
       </div>
       <Footer />
     </div>

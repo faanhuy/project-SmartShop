@@ -39,6 +39,13 @@ public class UpdateOrderStatusCommandHandler(
         }
 
         order.UpdateStatus(request.NewStatus);
+
+        // Set DeliveredAt when status changes to Delivered
+        if (request.NewStatus == OrderStatus.Delivered && order.DeliveredAt == null)
+        {
+            order.SetDeliveredAt(DateTime.UtcNow);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish event for email + SignalR notification

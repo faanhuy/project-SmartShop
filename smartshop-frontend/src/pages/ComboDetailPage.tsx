@@ -20,6 +20,7 @@ export default function ComboDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -121,7 +122,7 @@ export default function ComboDetailPage() {
         <div className="bg-white rounded-2xl shadow p-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {/* Image Section */}
-            <div className="md:col-span-2 flex items-center justify-center">
+            <div className="md:col-span-2 flex items-start justify-center">
               <div className="bg-gray-100 rounded-lg w-full aspect-square flex items-center justify-center overflow-hidden">
                 {combo.imageUrl ? (
                   <img
@@ -191,7 +192,21 @@ export default function ComboDetailPage() {
               {/* Description */}
               {combo.description && (
                 <div className="mb-6">
-                  <p className="text-gray-700 text-sm leading-relaxed">{combo.description}</p>
+                  <div
+                    className={`text-gray-700 text-sm leading-relaxed whitespace-pre-line overflow-hidden transition-all duration-300 ${
+                      descExpanded ? '' : 'line-clamp-4'
+                    }`}
+                  >
+                    {combo.description}
+                  </div>
+                  {combo.description.length > 200 && (
+                    <button
+                      onClick={() => setDescExpanded(v => !v)}
+                      className="mt-1 text-xs text-orange-500 hover:text-orange-600 font-medium"
+                    >
+                      {descExpanded ? 'Thu gọn' : 'Xem thêm'}
+                    </button>
+                  )}
                 </div>
               )}
 

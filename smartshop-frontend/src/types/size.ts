@@ -9,19 +9,9 @@ export interface ProductSize {
 export interface EffectivePriceItem {
   productId: string;
   sizeId: string | null;
+  basePrice: number;
   effectivePrice: number;
-  originalPrice: number;
-  hasDiscount: boolean;
-  campaignName: string | null;
-}
-
-export interface BulkEffectivePricesRequest {
-  storeId: string;
-  items: { productId: string; sizeId: string | null }[];
-}
-
-export interface BulkEffectivePricesResponse {
-  prices: EffectivePriceItem[];
+  hasPromotion: boolean;
 }
 
 // Size Master Management types

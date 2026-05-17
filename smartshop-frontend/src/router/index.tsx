@@ -12,11 +12,13 @@ import AdminStoresPage from '../pages/admin/AdminStoresPage';
 import AdminPromotionalPricePage from '../pages/admin/AdminPromotionalPricePage';
 import SizeManagementPage from '../pages/admin/SizeManagementPage';
 import AdminComboPage from '../pages/admin/AdminComboPage';
+import AdminReturnRequestsPage from '../pages/admin/AdminReturnRequestsPage';
 import ComboDetailPage from '../pages/ComboDetailPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
+import ReturnRequestsPage from '../pages/ReturnRequestsPage';
 import ProfilePage from '../pages/ProfilePage';
 import WishlistPage from '../pages/WishlistPage';
 import PaymentResultPage from '../pages/PaymentResultPage';
@@ -61,6 +63,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <OrderHistoryPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/orders/return-requests',
+    element: (
+      <PrivateRoute>
+        <ReturnRequestsPage />
       </PrivateRoute>
     ),
   },
@@ -141,6 +151,14 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <AdminComboPage />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/admin/return-requests',
+    element: (
+      <AdminRoute>
+        <AdminReturnRequestsPage />
       </AdminRoute>
     ),
   },
